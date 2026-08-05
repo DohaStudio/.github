@@ -1,6 +1,7 @@
 # DohaStudio 조직 문서 저장소
 
 > 문서 상태: [제안]
+> 공통 명세: `0.1.0` (`draft-baseline`)
 
 이 Public `.github` 저장소는 DohaStudio AI Music Ecosystem의 Organization Profile, 공통 Architecture, Repository 관계, 개발·보안·라이선스 정책과 Contribution 기준을 관리합니다.
 
@@ -14,6 +15,8 @@
 - [Repository Boundary](docs/repository-boundary.md)
 - [Provider Contract](docs/provider-contract.md)
 - [Common Policies](docs/common-policies.md)
+- [공통 명세 기준선](docs/specifications/README.md)
+- [변경 이력](CHANGELOG.md)
 - [Contribution](CONTRIBUTING.md)
 - [Security](SECURITY.md)
 - [Support](SUPPORT.md)

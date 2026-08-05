@@ -12,5 +12,6 @@
 - [Common License Policy](common-license-policy.md)
 - [Common ADR Policy](common-adr-policy.md)
 - [Organization Roadmap](common-roadmap.md)
+- [공통 명세 `0.1.0` 기준선](specifications/README.md)
 
 Contribution·보안·지원은 [CONTRIBUTING](../CONTRIBUTING.md), [SECURITY](../SECURITY.md), [SUPPORT](../SUPPORT.md)를 확인합니다.
