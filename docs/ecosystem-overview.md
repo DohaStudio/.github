@@ -1,4 +1,4 @@
-# Ecosystem Overview
+# 생태계 개요
 
 > 문서 상태: [제안]
 

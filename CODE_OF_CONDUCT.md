@@ -1,4 +1,4 @@
-# DohaStudio Code of Conduct
+# DohaStudio 행동 강령
 
 DohaStudio는 안전하고 존중받는 협업 환경을 지향합니다.
 

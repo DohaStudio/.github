@@ -1,5 +1,5 @@
 ---
-name: Bug report
+name: 버그 보고
 about: 재현 가능한 오류를 보고합니다.
 title: 'fix: '
 labels: bug

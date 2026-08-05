@@ -1,4 +1,4 @@
-# Security Policy
+# 보안 정책
 
 ## 공개 Issue에 올리지 않을 내용
 

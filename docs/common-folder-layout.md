@@ -1,4 +1,4 @@
-# Common Folder Layout
+# 공통 폴더 구조
 
 > 문서 상태: [제안]
 

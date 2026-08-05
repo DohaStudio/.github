@@ -1,11 +1,11 @@
-# DohaStudio AI Music Ecosystem
+# DohaStudio AI 음악 생태계
 
 DohaStudio는 가사, 음악, 보컬과 Workspace 제작 흐름을 분리된 Repository와 Provider로 구성하는 개인 AI Music Ecosystem입니다.
 
 > 현재 상태: Repository와 Architecture Foundation [제안]
 > AI Runtime·Training·Provider API: 각 Repository Roadmap 기준 [계획] 또는 [미구현]
 
-## Ecosystem
+## 생태계
 
 ```mermaid
 flowchart TB

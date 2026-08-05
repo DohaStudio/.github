@@ -1,4 +1,4 @@
-# Common Branch Strategy
+# 공통 브랜치 전략
 
 > 문서 상태: [제안]
 

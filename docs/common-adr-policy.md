@@ -1,4 +1,4 @@
-# Common ADR Policy
+# 공통 ADR 정책
 
 > 문서 상태: [제안]
 

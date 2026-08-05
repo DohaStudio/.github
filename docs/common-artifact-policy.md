@@ -1,4 +1,4 @@
-# Common Artifact Policy
+# 공통 Artifact 정책
 
 > 문서 상태: [제안]
 

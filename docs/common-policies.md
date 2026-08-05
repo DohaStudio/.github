@@ -1,4 +1,4 @@
-# Common Policies
+# 공통 정책
 
 > 문서 상태: [제안]
 

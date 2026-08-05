@@ -1,4 +1,4 @@
-# DohaStudio Organization Repository
+# DohaStudio 조직 문서 저장소
 
 > 문서 상태: [제안]
 
@@ -18,7 +18,7 @@
 - [Security](SECURITY.md)
 - [Support](SUPPORT.md)
 
-## Repository
+## 저장소
 
 - [DohaMusic](https://github.com/DohaStudio/DohaMusic)
 - [DohaLM](https://github.com/DohaStudio/DohaLM)

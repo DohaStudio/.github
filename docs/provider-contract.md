@@ -1,4 +1,4 @@
-# Common Provider Contract
+# 공통 Provider 계약
 
 > 문서 상태: [제안]
 > Provider HTTP API: Repository별 [계획] 또는 [미구현]

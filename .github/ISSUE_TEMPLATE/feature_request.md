@@ -1,5 +1,5 @@
 ---
-name: Feature request
+name: 기능 제안
 about: Ecosystem 또는 Repository 기능을 제안합니다.
 title: 'feat: '
 labels: enhancement

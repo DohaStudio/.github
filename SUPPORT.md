@@ -1,4 +1,4 @@
-# Support
+# 지원 안내
 
 - 버그: 해당 Repository의 Bug Report Template
 - 기능 제안: 해당 Repository의 Feature Request Template

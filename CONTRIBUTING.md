@@ -1,6 +1,6 @@
-# Contributing to DohaStudio
+# DohaStudio 기여 안내
 
-## Repository 선택
+## 저장소 선택
 
 - Workspace·Project·Asset·Mix·Export: DohaMusic
 - Lyrics Generation·Analysis·Revision: DohaLM
@@ -20,7 +20,7 @@
 
 `main`은 안정화·릴리스용이며 일반 작업에서 직접 변경하지 않습니다.
 
-## Commit Convention
+## 커밋 규칙
 
 - `docs:` 문서
 - `feat:` 기능

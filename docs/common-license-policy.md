@@ -1,4 +1,4 @@
-# Common License Policy
+# 공통 라이선스 정책
 
 > 문서 상태: [제안]
 

@@ -1,5 +1,5 @@
 ---
-name: Documentation
+name: 문서 개선
 about: 문서 오류, 모순 또는 누락을 보고합니다.
 title: 'docs: '
 labels: documentation

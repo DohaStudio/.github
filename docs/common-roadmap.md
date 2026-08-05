@@ -1,4 +1,4 @@
-# DohaStudio Organization Roadmap
+# DohaStudio 조직 로드맵
 
 > 문서 상태: [계획]
 
