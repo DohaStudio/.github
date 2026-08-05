@@ -7,7 +7,7 @@
 
 Artifact(아티팩트)는 실제 파일 또는 직렬화된 Payload입니다. 예시는 `txt`, `wav`, `mp3`, `flac`, `json`, `yaml`입니다. Artifact는 논리 객체인 Asset이 아니며 [AssetVersion](02-asset-version-specification.md)이 Artifact ID를 참조합니다.
 
-## 2. 최소 Metadata
+## 2. 최소 메타데이터
 
 | 필드 | 의미 |
 |---|---|

@@ -7,7 +7,7 @@
 
 코드, Dataset, 보존 Artifact와 재생성 가능한 임시 파일의 lifecycle을 분리합니다. 아래 이름은 논리 Root이며 실제 drive와 mount 위치는 환경별 설정으로 주입합니다.
 
-## 2. 공식 Root
+## 2. 공식 루트
 
 ```text
 DohaProjects/
@@ -35,7 +35,7 @@ DohaTemp/
 └── music/
 ```
 
-## 3. Root 책임
+## 3. 루트 책임
 
 | Root | 책임 | Git 포함 |
 |---|---|---|
@@ -44,7 +44,7 @@ DohaTemp/
 | `DohaArtifacts` | Model, Checkpoint, 생성 결과, 평가, Mix와 Export | 금지 |
 | `DohaTemp` | Cache, 임시 출력, chunk, test output와 venv | 금지 |
 
-## 4. Dataset Layout
+## 4. Dataset 구조
 
 도메인별 `DohaData/{domain}`은 필요에 따라 다음 lifecycle을 사용합니다.
 
@@ -64,7 +64,7 @@ private/
 
 도메인에 필요하지 않은 폴더를 억지로 생성하지 않습니다. 실제 구조는 Dataset Manifest와 Repository Data 정책을 따릅니다.
 
-## 5. Artifact Layout
+## 5. Artifact 구조
 
 | 경로 | 역할 |
 |---|---|
@@ -86,7 +86,7 @@ music/
 
 Provider Runtime 결과를 `music`에 저장하지 않고 각 Provider domain에 저장합니다. Mix·Export·Preview·Composition Snapshot은 DohaMusic 책임입니다.
 
-## 6. Temp 원칙
+## 6. 임시 파일 원칙
 
 - 유일한 원본과 최종 Artifact를 Temp에 저장하지 않습니다.
 - Temp 파일은 Job·Run ID로 격리하고 재생성 가능해야 합니다.

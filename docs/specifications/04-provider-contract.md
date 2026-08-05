@@ -41,7 +41,7 @@ flowchart TB
 | `Health` | process 생존 여부 확인 |
 | `Readiness` | 새 Job 수락 가능 여부 확인 |
 
-## 4. 공통 요청 Metadata
+## 4. 공통 요청 메타데이터
 
 - `provider_id`
 - `capability`
@@ -56,7 +56,7 @@ flowchart TB
 
 사용자 권한 검증에 필요한 식별자는 최소화하며 실제 개인정보와 로컬 경로를 전달하지 않습니다.
 
-## 5. 공통 응답 Metadata
+## 5. 공통 응답 메타데이터
 
 - `job_id`, `status`, `progress_percent`
 - `provider_id`, `api_contract_version`
@@ -65,7 +65,7 @@ flowchart TB
 - `model_manifest_id`
 - 구조화된 `error`
 
-## 6. Versioning과 호환성
+## 6. 버전 관리와 호환성
 
 Provider는 지원 contract version을 capability 응답에 명시합니다. 호환되지 않는 version 요청은 명확한 오류로 거부합니다. 필드 삭제·의미 변경은 새 major contract version에서 수행합니다.
 

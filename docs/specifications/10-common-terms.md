@@ -24,7 +24,7 @@
 
 | 용어 | 한국어 설명 |
 |---|---|
-| `Asset` | Project 안에서 관리되는 논리적 작품 자산. 실제 파일이 아님 |
+| `Asset` | Workspace 범위에서 관리되고 `ProjectAsset`을 통해 여러 Project에서 재사용할 수 있는 논리 자산. 실제 파일이 아님 |
 | `AssetVersion` | Asset의 특정 시점 불변 상태와 계보 |
 | `Artifact` | 실제 파일 또는 직렬화된 Payload |
 | `AssetRelation` | Asset 또는 Version 사이의 의미 관계 |
@@ -64,6 +64,7 @@
 
 - Asset와 Artifact를 서로 바꾸어 쓰지 않습니다.
 - Asset와 AssetVersion을 서로 바꾸어 쓰지 않습니다.
+- Asset에 `project_id`를 두지 않으며 Project와 Asset은 `ProjectAsset`으로 연결합니다.
 - Snapshot은 Asset의 최신 상태가 아니라 정확한 AssetVersion을 참조합니다.
 - Recording Take와 Enrollment Sample을 Training Dataset으로 자동 간주하지 않습니다.
 - Evaluation 통과와 Commercial approval을 같은 상태로 표현하지 않습니다.

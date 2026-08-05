@@ -33,7 +33,7 @@ Dataset Manifest는 Dataset의 identity, version, source, 권리, split, checksu
 
 Dataset level 승인은 item level 권리, Consent와 목적별 승인을 대체하지 않습니다. 본인 음성에도 반주·가사·제3자 저작물 권리가 별도로 적용될 수 있습니다.
 
-## 4. Split
+## 4. 데이터 분할
 
 Split은 `train`, `validation`, `test`와 필요 시 domain 확장 집합을 정의합니다. 동일 source, speaker, 작품 또는 중복 content가 여러 split에 누수되지 않도록 group 기준과 생성 algorithm version을 기록합니다.
 

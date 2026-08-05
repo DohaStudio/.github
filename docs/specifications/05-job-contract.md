@@ -52,18 +52,18 @@ stateDiagram-v2
 
 `succeeded`, `failed`, `cancelled`는 종료 상태입니다. 취소 요청과 최종 `cancelled`를 구분해야 하는 구현은 내부 또는 새 contract version에서 `cancel_requested`를 확장 상태로 정의할 수 있습니다.
 
-## 4. Progress
+## 4. 진행률
 
 `progress_percent`는 단조 증가를 권장하지만 모델 재시작·단계 변경 시 의미가 달라질 수 있으므로 `stage`와 함께 해석합니다. 100은 `succeeded`를 자동으로 의미하지 않으며 Artifact 검증 후 상태를 확정합니다.
 
-## 5. Retry
+## 5. 재시도
 
 - Retry는 새 `job_id`를 발급합니다.
 - 원래 입력 Version, 설정과 모델을 그대로 쓸지 명시적으로 변경할지 기록합니다.
 - 이전 실패 Job과 오류를 보존합니다.
 - Retry 성공이 기존 실패 상태를 덮어쓰지 않습니다.
 
-## 6. Error
+## 6. 오류
 
 `error`는 `error_code`, 한국어 사용자 메시지 또는 안전한 지역화 key, `retryable`, `stage`, `details_id`를 포함합니다. Stack trace, token, 개인 경로와 Dataset 내용을 외부 응답에 포함하지 않습니다.
 

@@ -11,7 +11,7 @@ Asset(자산)은 DohaMusic Workspace가 관리하는 논리적 작품 객체입�
 
 | 엔티티 | 정의 |
 |---|---|
-| `Asset` | Project 안에서 식별되는 논리 자산 |
+| `Asset` | Workspace 범위에서 식별되고 여러 Project에서 재사용할 수 있는 논리 자산 |
 | `AssetVersion` | 특정 시점의 불변 자산 상태 |
 | `Artifact` | AssetVersion이 참조하는 실제 파일 또는 Payload |
 | `AssetRelation` | Asset 또는 AssetVersion 사이의 의미 관계 |
@@ -25,7 +25,7 @@ Asset(자산)은 DohaMusic Workspace가 관리하는 논리적 작품 객체입�
 | 필드 | 의미 |
 |---|---|
 | `asset_id` | 전역 또는 Workspace 범위에서 유일한 식별자 |
-| `project_id` | 소속 Project 식별자 |
+| `workspace_id` | 자산을 소유하는 Workspace 식별자. 저장소별 단일 Workspace 계약에서는 생략 가능 |
 | `asset_type` | `lyrics`, `music`, `vocal`, `stem`, `recording`, `mix`, `export` 등의 논리 유형 |
 | `owner_id` | Owner 식별자 |
 | `lifecycle_status` | 현재 lifecycle 상태 |
@@ -39,7 +39,7 @@ Asset과 ProjectAsset의 최종 소유자는 DohaMusic입니다. DohaLM, DohaAud
 
 Owner는 사용자, Workspace 또는 정책상 허용된 조직 주체를 식별합니다. Provider ID를 Owner로 사용하지 않습니다.
 
-## 5. Lifecycle
+## 5. 수명 주기
 
 공통 lifecycle 후보는 `draft`, `active`, `archived`, `deletion_requested`, `deleted`입니다. `deleted`는 물리 파일 삭제 완료를 자동으로 의미하지 않으며 Artifact와 파생 계보의 삭제 상태를 별도로 확인해야 합니다.
 
@@ -50,13 +50,16 @@ Owner는 사용자, Workspace 또는 정책상 허용된 조직 주체를 식별
 - Approval은 `usage_purpose`, `status`, `approved_by`, `evidence_id`, `decided_at`을 기록해야 합니다.
 - 평가 통과, 사용자 선택, 학습 허용과 상업 이용 승인은 서로 다른 결정입니다.
 
-## 7. AssetRelation
+## 7. AssetRelation 관계
 
 AssetRelation은 `relation_id`, `source_id`, `target_id`, `relation_type`, `created_at`을 가집니다. `derived_from`, `alternative_of`, `component_of`, `replaces` 등의 관계를 사용할 수 있으나 구체 enum은 Repository 계약에서 versioning합니다.
+
+Project와 Asset은 `ProjectAsset`으로만 연결합니다. `ProjectAsset`은 최소한 `project_asset_id`, `project_id`, `asset_id`, `role`, `display_order`, `created_at`을 가지며 `(project_id, asset_id, role)` 조합의 중복을 방지합니다. Asset에 `project_id`를 저장하지 않으므로 하나의 Asset을 여러 Project에서 안전하게 재사용할 수 있습니다.
 
 ## 8. 금지 사항
 
 - Asset에 로컬 절대 파일 경로를 저장하지 않습니다.
+- Asset에 `project_id`를 저장하거나 Project 1:N 소속으로 고정하지 않습니다.
 - Asset와 Artifact를 같은 ID 공간으로 취급하지 않습니다.
 - Provider가 사용자의 최종 Selection이나 Approval을 임의로 변경하지 않습니다.
 - 논리 삭제만으로 개인 데이터의 물리 삭제가 완료됐다고 표시하지 않습니다.
