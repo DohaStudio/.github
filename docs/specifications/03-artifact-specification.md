@@ -16,7 +16,7 @@ Artifact(아티팩트)는 실제 파일 또는 직렬화된 Payload입니다. �
 | `media_type` | MIME type 또는 표준 직렬화 형식 |
 | `size_bytes` | Payload 크기 |
 | `checksum_algorithm` | 기본 권장값 `sha256` |
-| `artifact_checksum` | Payload checksum |
+| `artifact_checksum` | Payload checksum 값 |
 | `producer_type` | `user`, `provider`, `workspace`, `import` |
 | `producer_id` | Provider 또는 actor 식별자 |
 | `run_id` | 생성 Job·Training·Evaluation Run 식별자. 없을 수 있음 |
@@ -39,10 +39,10 @@ Artifact 등록 전에 크기와 checksum을 계산합니다. 같은 ID의 Paylo
 | 도메인 | Artifact 예시 |
 |---|---|
 | Lyrics | UTF-8 text, 구조화된 JSON |
-| Audio | WAV, FLAC, MP3 preview |
+| Audio | WAV·FLAC 파일과 MP3 Preview |
 | Model | 모델 weight, Adapter, Checkpoint |
-| Evaluation | JSON metric, Markdown report |
-| Workspace | Mix, Export, Preview, Composition Snapshot |
+| Evaluation | JSON 평가 지표와 Markdown 보고서 |
+| Workspace | Mix, Export, Preview와 Composition Snapshot |
 
 파일 확장자만으로 Artifact kind를 결정하지 않습니다. MIME type, kind와 계약 version을 함께 사용합니다.
 
