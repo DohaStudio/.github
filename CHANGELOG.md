@@ -13,6 +13,7 @@
 
 - Provider Runtime, API, Dataset Migration, Training과 Model Registry
 
-### 검토 필요
+### 라이선스
 
-- `.github` 저장소의 최종 코드·문서 라이선스
+- `.github` 저장소의 코드·문서 라이선스를 Apache License 2.0으로 확정했습니다.
+- Dataset·외부 모델·모델 가중치·Checkpoint·Adapter·생성 결과·개인 음성·동의 증적·제3자 콘텐츠는 Apache-2.0 적용 대상에서 제외하고 별도 권리 검토 대상으로 유지합니다.
