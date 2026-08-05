@@ -3,10 +3,10 @@
 ## 저장소 선택
 
 - Workspace·Project·Asset·Mix·Export: DohaMusic
-- Lyrics Generation·Analysis·Revision: DohaLM
-- Music Generation·Stem·Audio Analysis: DohaAudio
-- Singing Voice·Voice Conversion·Vocal Processing: DohaVocal
-- Organization 공통 문서·Template: 이 `.github` 저장소
+- 가사 생성·분석·수정: DohaLM
+- 음악 생성·Stem 분리·오디오 분석: DohaAudio
+- 가창 음성·음색 변환·보컬 처리: DohaVocal
+- 조직 공통 문서·Template: 이 `.github` 저장소
 
 ## 공통 작업 흐름
 
