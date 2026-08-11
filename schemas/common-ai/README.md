@@ -5,6 +5,10 @@ Contracts. It validates contract documents and synthetic cross-object lineage;
 it does not implement a Runtime, API, database, Dataset pipeline, Provider, or
 external resource lookup.
 
+Python packaging, offline resource loading, version axes and future immutable
+artifact pinning are documented in
+[`docs/common-ai-python-package.md`](../../docs/common-ai-python-package.md).
+
 ## Package contents
 
 - `v1/common-envelope.schema.json`: shared identity, audit, producer, and

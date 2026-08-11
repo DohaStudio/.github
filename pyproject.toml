@@ -1,0 +1,69 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dohastudio-common-ai-contracts"
+dynamic = ["version"]
+description = "Offline Python resources and validator for DohaStudio Common AI Contract Schema v1"
+readme = "schemas/common-ai/README.md"
+requires-python = ">=3.10,<3.13"
+license = { file = "LICENSE" }
+authors = [{ name = "DohaStudio" }]
+dependencies = ["jsonschema>=4.23,<5"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+
+[project.scripts]
+dohastudio-common-ai = "dohastudio_common_ai.validator:main"
+
+[tool.hatch.version]
+path = "src/dohastudio_common_ai/__about__.py"
+
+[tool.hatch.build]
+exclude = [
+  "/.git",
+  "/dist",
+  "/build",
+  "/.venv*",
+  "/**/__pycache__",
+  "/**/*.pyc",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dohastudio_common_ai"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"schemas/common-ai/v1" = "dohastudio_common_ai/resources/v1"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src/dohastudio_common_ai",
+  "/schemas/common-ai/v1",
+  "/schemas/common-ai/README.md",
+  "/tools/validate_common_ai.py",
+  "/tests",
+  "/requirements-validation.txt",
+  "/LICENSE",
+  "/pyproject.toml",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/test_common_ai_package.py" = ["E402"]
+"tools/validate_common_ai.py" = ["E402"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests"]
