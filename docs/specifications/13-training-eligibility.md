@@ -5,7 +5,7 @@
 
 ## 1. 역할
 
-`TrainingEligibility`는 LearningCandidate가 DatasetVersion과 학습으로 진입할 수 있는지를 fail-closed로 판정하는 공통 Gate입니다.
+`TrainingEligibility`는 LearningCandidate 또는 sample 하나가 특정 학습 목적의 DatasetVersion draft inclusion 대상이 될 수 있는지를 fail-closed로 판정하는 공통 Gate입니다. Dataset 집합 승인, Model 평가와 Runtime 승격은 이 객체의 책임이 아닙니다.
 
 ## 2. 필드
 
@@ -16,10 +16,10 @@
 | `candidate_status` | 검증 시 고정 상태 |
 | `rights_metadata_id` | 권리 record |
 | `policy_version` | 적용 eligibility policy |
-| `checks` | rights, consent, quality, PII, leakage, lineage, reference-source separation |
+| `usage_purpose` | 판정 대상 학습 목적 |
+| `checks` | review, rights, provenance, consent, retention, purpose scope, quality, PII, lineage, reference-source separation |
 | `approved` | review 승인 |
-| `training_allowed` | Dataset/Training 진입 허용 |
-| `runtime_allowed` | 파생 모델의 Runtime 고려 허용; 보통 evaluation 전 false |
+| `training_allowed` | 해당 목적의 Dataset draft inclusion 허용 |
 | `decision` | `eligible`, `ineligible`, `needs_review`, `revoked` |
 | `reason_codes` | 구조화된 판정 사유 |
 | `reviewed_by`, `reviewed_at` | 승인 evidence |
@@ -31,20 +31,19 @@
 
 ```mermaid
 flowchart LR
-    C[Candidate] --> A[Approved Review]
-    A --> T[training_allowed]
-    T --> D[DatasetVersion]
-    D --> R[TrainingRun]
-    R --> E[EvaluationRun]
-    E --> M[Approved ModelVersion]
-    M --> X[runtime_allowed]
+    C[LearningCandidate] --> R[Candidate Review]
+    R --> E[TrainingEligibility]
+    E -->|training_allowed=true| D[DatasetVersion Draft Inclusion]
+    D --> G[Dataset-level Eligibility Validation]
 ```
 
 ## 4. 불변 조건
 
-- `candidate_status=approved`, 모든 필수 check pass, `approved=true`일 때만 `training_allowed=true`가 가능합니다.
+- `candidate_status=approved`, 모든 필수 check pass, `approved=true`일 때만 해당 `usage_purpose`의 `training_allowed=true`가 가능합니다.
 - Reference Audio 원본이 candidate payload에 있으면 `ineligible`입니다.
-- `runtime_allowed`는 candidate Gate만으로 true가 될 수 없으며 EvaluationRun과 ModelVersion 승인이 필요합니다.
+- 권리·provenance·consent·retention이 `unknown`, `missing`, `expired`, `revoked`이거나 목적 범위가 불일치하면 `training_allowed=false`입니다.
+- Candidate `training_allowed=true`는 Dataset 집합 eligibility, Dataset 승인·Freeze, TrainingRun, Model 승인 또는 Runtime 사용을 의미하지 않습니다.
+- TrainingEligibility에는 `runtime_allowed`, Runtime 승격, Model 배포·Evaluation 이후 적격성 판단 필드를 두지 않습니다.
 - RightsMetadata가 revoked되면 기존 eligibility를 재사용하지 않습니다.
 - policy, candidate fingerprint 또는 rights record가 바뀌면 새 판정을 발급합니다.
 
@@ -52,4 +51,4 @@ flowchart LR
 
 | 날짜 | 변경 내용 |
 |---|---|
-| 2026-08-11 | candidate→approved→training/runtime Gate와 fail-closed 조건 정의 |
+| 2026-08-11 | Candidate 단위 학습 Gate로 책임 제한, Dataset 집합·Runtime Gate 분리 |

@@ -18,9 +18,13 @@
 | `output_schema_refs` | 지원 출력 schema/version |
 | `supported_operations` | MusicIntent operation subset |
 | `execution_mode` | sync/async/streaming 선언 |
+| `streaming_supported` | streaming 지원 여부 |
+| `cancellation_supported` | cancellation 지원 여부 |
+| `contract_compatibility_range` | 지원 contract/schema version 범위 |
 | `model_version_ids` | 선택 가능한 승인 모델 |
 | `constraints` | duration, format, device, rights 등 |
 | `status` | `planned`, `available`, `degraded`, `unavailable`, `deprecated` |
+| `deprecated_at`, `superseded_by` | deprecation 시각과 대체 capability |
 
 `schema_name`은 `provider_capability`입니다.
 
@@ -39,6 +43,7 @@
 - `available`은 권리·모델·runtime readiness가 모두 유효한 상태여야 합니다.
 - capability 목록은 실제 구현 상태를 과장하지 않습니다.
 - capability ID 의미 변경은 새 major version 또는 새 ID를 사용합니다.
+- endpoint, credential, access token, 내부 model/storage 경로, signed URL, raw Provider error나 stack trace를 포함하지 않습니다.
 
 ## 변경 이력
 

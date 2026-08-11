@@ -20,7 +20,7 @@
 | `human_review` | rubric, reviewer, blind 조건과 결과 |
 | `similarity_report_ids` | 음악 유사도 평가 결과 |
 | `rights_review` | runtime 목적 권리 검토 |
-| `status` | `planned`, `running`, `completed`, `failed`, `invalid` |
+| `status` | `queued`, `running`, `completed`, `failed`, `cancelled` |
 | `approval` | `pending`, `approved`, `rejected`와 evidence |
 | `limitations` | 대표성·누수·환경 한계 |
 
@@ -30,9 +30,10 @@
 
 - Training과 평가 Dataset의 누수 검증이 필요합니다.
 - metric version이나 checkpoint가 달라지면 새 EvaluationRun입니다.
-- `completed`와 `approval=approved`는 별도 상태입니다.
+- `completed`와 `approval=approved`는 별도 상태이며 `completed + pending/rejected`도 유효합니다.
 - human review가 필수인 capability는 metric만으로 승인할 수 없습니다.
 - similarity 결과는 창작 지원 위험 신호이며 법률 승인을 대체하지 않습니다.
+- terminal 실행 record를 제자리 덮어쓰지 않습니다. rubric, metric, checkpoint 또는 approval evidence를 바꿔 재평가하면 새 EvaluationRun을 발급합니다.
 
 ## 변경 이력
 

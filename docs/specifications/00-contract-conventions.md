@@ -16,6 +16,9 @@
 | `object_id` | opaque string | 예 | 전역 충돌을 피하는 immutable ID |
 | `created_at` | RFC 3339 UTC | 예 | 생성 시각 |
 | `created_by` | actor reference | 예 | user/service/reviewer 식별자 |
+| `producer` | repository/service + version | 예 | 객체를 발급한 권위 producer |
+| `correlation_id` | opaque string | 아니오 | 교차 저장소 요청 상관관계 |
+| `workspace_id`, `job_id` | opaque string | 아니오 | Workspace/Job 문맥이 필요한 객체의 참조 |
 | `extensions` | object | 아니오 | namespace가 있는 저장소별 확장 |
 
 ID는 로컬 경로·이메일·원문에서 파생하지 않습니다. 공개 객체에는 비밀, 개인정보와 절대 경로를 넣지 않습니다.
@@ -38,7 +41,17 @@ ID는 로컬 경로·이메일·원문에서 파생하지 않습니다. 공개 �
 
 객체 관계는 embedded payload보다 ID reference를 우선합니다. 참조 대상의 `object_id`, `schema_version`, 필요 시 `content_fingerprint`를 기록합니다. Lineage는 source → candidate → dataset → run → model → runtime 방향으로 추적 가능해야 합니다.
 
-## 6. 검증 공통 오류
+공식 lineage는 LearningCandidate → TrainingEligibility → DatasetVersion → DatasetManifest → TrainingRun → EvaluationRun → ModelVersion → ModelManifest → Provider Runtime입니다. 각 단계는 stable ID, schema version, producer, `created_at`, parent/source reference, 필요한 rights/provenance·checksum/digest·approval evidence와 `supersedes`를 추적합니다.
+
+승인된 candidate review, frozen DatasetVersion, issued DatasetManifest, terminal TrainingRun/EvaluationRun, approved ModelVersion과 issued ModelManifest는 제자리 덮어쓰지 않습니다. 변경은 새 Version/Run/Manifest 또는 append-only event로 기록합니다.
+
+## 6. 권위 객체와 Evidence
+
+- DatasetVersion은 Dataset identity, lifecycle, approval, lineage, purpose별 eligibility, split와 freeze의 논리적 source of truth입니다.
+- ModelVersion은 Model identity, base/adapter 관계, EvaluationRun, approval, compatibility, `runtime_allowed`와 deprecated 상태의 논리적 source of truth입니다.
+- DatasetManifest와 ModelManifest는 Version에 안정적인 ID·checksum으로 결속된 발행 후 immutable 재현 evidence이며 독립 승인 권한이 없습니다.
+
+## 7. 검증 공통 오류
 
 | 오류 | 조건 |
 |---|---|
@@ -50,7 +63,7 @@ ID는 로컬 경로·이메일·원문에서 파생하지 않습니다. 공개 �
 | `LINEAGE_INCOMPLETE` | 필수 parent/source 누락 |
 | `STATE_TRANSITION_INVALID` | 허용되지 않은 lifecycle 전이 |
 
-## 7. 비목표
+## 8. 비목표
 
 HTTP endpoint, ORM, DB table, queue, worker, serialization library와 Repository 내부 class 이름은 정의하지 않습니다.
 

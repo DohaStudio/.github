@@ -16,6 +16,10 @@ DohaLM, DohaMusic, DohaAudio와 DohaVocal은 음악 의도, 분석 feature, 학�
 4. Reference Audio는 직접 학습하지 않고 승인된 FeatureRecord와 사용자 작업·수정·선택만 candidate가 될 수 있습니다.
 5. SimilarityReport는 창작 지원 분석이며 법적 판정이 아닙니다.
 6. candidate approval, training eligibility, evaluation approval과 runtime eligibility를 독립 Gate로 둡니다.
+7. 교차 저장소 계약은 이 Common Specification이 소유하지만 Runtime 데이터는 각 저장소가 소유합니다. DohaMusic은 사용자 작업·Rights/Provenance/Consent·LearningCandidate·Workspace lineage를, DohaLM은 DatasetVersion·TrainingRun·EvaluationRun·ModelVersion과 Planning/RevisionPlan을, DohaAudio는 Feature·Similarity 계산을 소유합니다.
+8. DatasetVersion과 ModelVersion을 논리적 source of truth로, DatasetManifest와 ModelManifest를 ID·checksum으로 결속된 발행 후 immutable 재현 evidence로 사용합니다. Manifest는 Version의 approval·lifecycle을 독립 변경할 수 없습니다.
+9. TrainingEligibility는 Candidate 단위 학습 Gate로 제한합니다. Dataset 집합 Gate는 DatasetVersion이, Runtime 승격은 완료·승인 EvaluationRun과 ModelVersion의 복합 `runtime_allowed` invariant가 소유합니다.
+10. lineage는 LearningCandidate → TrainingEligibility → DatasetVersion → DatasetManifest → TrainingRun → EvaluationRun → ModelVersion → ModelManifest → Provider Runtime을 보존합니다.
 
 ## 영향
 
@@ -28,7 +32,7 @@ DohaLM, DohaMusic, DohaAudio와 DohaVocal은 음악 의도, 분석 feature, 학�
 ### 비용과 위험
 
 - 각 Repository에 mapping과 compatibility validation이 필요합니다.
-- 기존 미병합 명세와 field naming 충돌을 후속 통합에서 해결해야 합니다.
+- 기존 기준선과 field naming의 Repository별 compatibility mapping이 필요합니다.
 - 권리·similarity threshold는 정책·법무 검토 없이는 확정할 수 없습니다.
 
 ## 검토한 대안
@@ -39,14 +43,16 @@ DohaLM, DohaMusic, DohaAudio와 DohaVocal은 음악 의도, 분석 feature, 학�
 
 ## Migration
 
-승인 후 공통 JSON Schema package를 먼저 만들고 각 Repository가 기존 객체와의 mapping을 문서화합니다. 기존 객체를 제자리 변경하지 않고 compatibility adapter와 새 version을 사용합니다. Dataset/Model Manifest와 Version 객체의 source-of-truth 관계는 별도 ADR로 확정합니다.
+승인 후 `ORG-02: Common AI Contract Schema v1`에서 Common Envelope, MusicIntent, ProviderCapability, RightsMetadata와 TrainingEligibility JSON Schema, version policy, compatibility validator와 synthetic valid/invalid fixture를 만듭니다. 각 Repository는 기존 객체와 mapping을 문서화하고 compatibility layer로 전환합니다.
+
+기존 DohaLM REST/SSE와 Adapter Loader는 즉시 재구성하지 않고 Compatibility Layer 뒤에 보존합니다. Directory Reorganization보다 mapping layer를 먼저 수행해야 기존 API·artifact identity·rollback 경계를 동시에 바꾸는 위험을 피할 수 있습니다. 기존 Version·Manifest·Run을 제자리 변경하지 않고 새 version 또는 `supersedes` replacement를 사용합니다.
 
 ## 재검토 조건
 
 - 공통 계약이 Provider 구현을 표현하지 못할 때
 - 권리·privacy·법무 검토가 현재 field로 표현되지 않을 때
 - Repository 간 version negotiation이 실패할 때
-- DatasetVersion/ModelVersion과 기존 Manifest의 중복이 운영 오류를 만들 때
+- Version/Manifest 권위 또는 immutable replacement 계약이 운영 오류를 만들 때
 
 ## 제외
 

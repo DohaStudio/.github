@@ -22,20 +22,22 @@
 | `analysis_allowed` | 분석 목적 허용 |
 | `training_allowed` | 학습 목적 허용 |
 | `redistribution_allowed` | 원본/파생 공개 허용 |
-| `retain_source` | 원본 보관 허용과 기간 |
+| `retention_allowed` | 원본 또는 파생 record 보관 허용·기간·범위 |
+| `derivative_generation_allowed` | 파생 생성 허용; 적용 범위가 없으면 명시적 false |
 | `consent_evidence_refs` | 비공개 consent evidence 참조 |
 | `jurisdiction` | 적용 지역·정책 context |
 | `reviewed_at`, `reviewed_by` | 검토 evidence |
 
-`schema_name`은 `rights_metadata`입니다. `source_type`은 `user_created`, `generated`, `reference`, `uploaded`, `external`, `mixed`를 사용합니다. `rights_status`는 `unknown`, `pending_review`, `approved_limited`, `approved`, `rejected`, `revoked`를 사용합니다.
+`schema_name`은 `rights_metadata`입니다. `source_type`은 `user_created`, `generated`, `reference`, `uploaded`, `external`, `mixed`를 사용합니다. `rights_status`는 `unknown`, `pending_review`, `approved_limited`, `approved`, `rejected`, `expired`, `revoked`를 사용합니다.
 
 ## 3. 불변 조건
 
-- `unknown`, `pending_review`, `rejected`, `revoked`는 학습을 fail closed합니다.
+- missing record와 `unknown`, `pending_review`, `rejected`, `expired`, `revoked`는 분석·학습 등 요청 목적을 fail closed합니다.
 - `analysis_allowed`는 `training_allowed`를 의미하지 않습니다.
-- `retain_source=false`여도 승인된 파생 feature 보관 여부는 별도 필드·목적으로 검토합니다.
+- `retention_allowed=false`여도 승인된 파생 feature의 별도 보관 가능성을 자동 의미하지 않으며 목적별 record가 필요합니다.
 - Dataset/Model approval이 item-level RightsMetadata를 덮어쓰지 않습니다.
 - Consent 원문·개인정보·로컬 경로는 공개 객체에 넣지 않습니다.
+- 권리 철회·만료는 기존 Version·Run·Manifest를 삭제하거나 덮어쓰지 않고 append-only rights event와 영향받는 lineage 재평가를 시작합니다.
 
 ## 변경 이력
 

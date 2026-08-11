@@ -33,23 +33,25 @@
 ```mermaid
 stateDiagram-v2
     [*] --> draft
-    draft --> candidate
-    candidate --> reviewed
-    reviewed --> approved
-    approved --> frozen
-    frozen --> trained
-    reviewed --> draft: needs revision
+    draft --> submitted
+    submitted --> in_review
+    in_review --> approved
+    in_review --> rejected
+    approved --> included_in_dataset
+    included_in_dataset --> trained
+    in_review --> draft: revision required
 ```
 
-`draft`, `candidate`, `reviewed`, `approved`, `frozen`, `trained` 외 값은 허용하지 않습니다. `trained`는 최소 하나의 TrainingRun이 이 candidate가 포함된 DatasetVersion을 사용했음을 뜻하며 모델 승인을 뜻하지 않습니다.
+`draft`, `submitted`, `in_review`, `approved`, `rejected`, `included_in_dataset`, `trained` 외 값은 허용하지 않습니다. `rejected`는 terminal이며 내용 수정 후 재검토하려면 새 candidate 또는 명시적 replacement를 발급합니다. `trained`는 최소 하나의 성공한 TrainingRun이 이 candidate가 포함된 DatasetVersion을 사용했음을 뜻하며 모델 승인이나 Runtime 허용을 뜻하지 않습니다.
 
 ## 5. 불변 조건
 
-- `approved` 전에는 reviewer와 rights evidence가 필요합니다.
-- `frozen` 이후 content가 달라지면 새 candidate를 발급합니다.
+- `approved`에는 reviewer, approval evidence와 유효한 RightsMetadata가 필요합니다.
+- 승인된 review record와 candidate payload는 제자리 덮어쓰지 않습니다. 내용 변경은 새 candidate와 `supersedes` lineage를 사용합니다.
 - `reference_analysis`는 원본 Reference Audio가 아니라 FeatureRecord/해석 결과만 output에 둘 수 있습니다.
 - `human_edited`, `preference`, `similarity_revision`은 parent 또는 before/after lineage가 필요합니다.
-- TrainingEligibility가 통과하기 전 DatasetVersion에 포함할 수 없습니다.
+- TrainingEligibility가 통과하기 전 DatasetVersion draft inclusion 대상으로 사용할 수 없습니다.
+- Candidate `training_allowed=true`는 DatasetVersion 집합 적격성·승인·동결 또는 실제 TrainingRun 시작을 자동 허용하지 않습니다.
 
 ## 변경 이력
 

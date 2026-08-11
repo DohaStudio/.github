@@ -23,7 +23,7 @@
 
 ## 권장 다음 PR
 
-`common-ai-contracts-schema-v1`을 권장합니다. 공통 Envelope와 MusicIntent, ProviderCapability, RightsMetadata, TrainingEligibility의 JSON Schema·소형 synthetic fixture·compatibility validator만 포함합니다.
+PR #5가 검토·병합된 뒤 `ORG-02: Common AI Contract Schema v1`을 권장합니다. Common Envelope, MusicIntent, ProviderCapability, RightsMetadata, TrainingEligibility의 JSON Schema, schema version policy, compatibility validator와 synthetic valid/invalid fixture만 포함합니다.
 
 ## 변경 이력
 
