@@ -137,7 +137,7 @@
       "analysis_allowed": true,
       "training_allowed": true,
       "redistribution_allowed": false,
-      "retention_allowed": true,
+      "retention_allowed": {"allowed": true, "expires_at": "2027-08-11T00:00:00Z", "scope": "training"},
       "derivative_generation_allowed": true,
       "consent_evidence_refs": ["consent_test"],
       "jurisdiction": "KR",

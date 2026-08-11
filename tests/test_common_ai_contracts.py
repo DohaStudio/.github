@@ -222,6 +222,68 @@ class CommonAIContractTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertIn("RIGHTS_FAILURE", {issue.code for issue in first})
 
+    def test_gated_rights_require_complete_structured_retention(self) -> None:
+        base = load_json(FIXTURES / "scenarios" / "runtime-promotion.json")
+        cases = (
+            ("missing_scope", "remove", "scope", None),
+            ("boolean_true", "replace", None, True),
+            ("boolean_false", "replace", None, False),
+            ("integer", "replace", None, 1),
+            ("string_true", "replace", None, "true"),
+            ("null", "replace", None, None),
+            ("empty_object", "replace", None, {}),
+            ("allowed_only", "replace", None, {"allowed": True}),
+            ("missing_expiry", "remove", "expires_at", None),
+            ("unknown_scope", "set", "scope", "unknown"),
+            ("empty_scope", "set", "scope", ""),
+            ("case_changed_scope", "set", "scope", "Training"),
+            ("non_boolean_allowed", "set", "allowed", 1),
+        )
+        for purpose, rights_id, expected_id, expected_path in (
+            ("training", "rights_train", "eligibility_train", "$.rights_metadata_id"),
+            (
+                "runtime",
+                "rights_runtime",
+                "model_version_1",
+                "$.rights_policy_eligibility_id",
+            ),
+        ):
+            for name, operation, field, value in cases:
+                with self.subTest(purpose=purpose, case=name):
+                    scenario = copy.deepcopy(base)
+                    rights = next(
+                        item
+                        for item in scenario["objects"]
+                        if item["object_id"] == rights_id
+                    )
+                    retention = rights["retention_allowed"]
+                    if operation == "remove":
+                        retention.pop(field)
+                    elif operation == "replace":
+                        rights["retention_allowed"] = value
+                    else:
+                        retention[field] = value
+                    issues = self.validator.validate_scenario(scenario)
+                    matches = [
+                        issue
+                        for issue in issues
+                        if issue.code == "RIGHTS_FAILURE"
+                        and issue.object_id == expected_id
+                        and issue.path == expected_path
+                    ]
+                    self.assertTrue(matches, [issue.to_dict() for issue in issues])
+
+            valid = copy.deepcopy(base)
+            rights = next(
+                item for item in valid["objects"] if item["object_id"] == rights_id
+            )
+            rights["retention_allowed"] = {
+                "allowed": True,
+                "expires_at": "2027-08-11T00:00:00Z",
+                "scope": purpose,
+            }
+            self.assertEqual([], self.validator.validate_scenario(valid))
+
     def test_gated_scenarios_require_explicit_evaluation_time(self) -> None:
         for evaluated_at in (None, "not-a-date", "2026-08-11T12:00:00"):
             with self.subTest(evaluated_at=evaluated_at):

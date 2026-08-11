@@ -49,6 +49,7 @@ SEMVER = re.compile(
 )
 FAIL_CLOSED_RIGHTS = {"unknown", "pending_review", "rejected", "expired", "revoked"}
 FAIL_CLOSED_CHECKS = {"fail", "unknown", "missing", "expired", "revoked"}
+RIGHTS_RETENTION_SCOPES = {"training", "runtime"}
 MANIFEST_KINDS = {"dataset_manifest", "model_manifest"}
 
 
@@ -447,20 +448,16 @@ class ContractValidator:
         if rights.get("rights_status") not in {"approved", "approved_limited"}:
             return False
         retention = rights.get("retention_allowed")
-        retention_allowed = (
-            retention.get("allowed") if isinstance(retention, dict) else retention
-        )
-        if not retention_allowed:
+        if not isinstance(retention, dict):
             return False
-        if isinstance(retention, dict):
-            scope = retention.get("scope")
-            if scope is not None and scope != purpose:
-                return False
-            expires_at = retention.get("expires_at")
-            if expires_at is not None:
-                expires = self._parse_time(expires_at)
-                if expires is None or expires <= evaluated_at:
-                    return False
+        if retention.get("allowed") is not True:
+            return False
+        scope = retention.get("scope")
+        if scope not in RIGHTS_RETENTION_SCOPES or scope != purpose:
+            return False
+        expires = self._parse_time(retention.get("expires_at"))
+        if expires is None or expires <= evaluated_at:
+            return False
         if purpose == "training":
             return rights.get("training_allowed") is True
         if purpose == "runtime":

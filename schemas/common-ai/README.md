@@ -71,7 +71,10 @@ traces, credentials, raw Provider responses, or artifact payloads.
   ProviderCapability cannot expose endpoint, credential, token, or path data.
 
 Dataset and Runtime scenarios require an explicit timezone-aware `evaluated_at`.
-If `retention_allowed.expires_at` is earlier than or equal to that instant, the
+Gated Rights require structured `retention_allowed` evidence with
+`allowed=true`, a purpose-matched `training` or `runtime` scope, and a
+timezone-aware `expires_at`; the legacy Boolean form never grants Dataset or
+Runtime authority. If the expiry is earlier than or equal to `evaluated_at`, the
 Rights check fails closed; a later expiry remains subject to every other Rights
 and purpose constraint.
 
