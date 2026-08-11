@@ -9,7 +9,7 @@ import json
 import re
 import sys
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -109,14 +109,14 @@ class ContractValidator:
         return value if isinstance(value, str) else None
 
     @staticmethod
-    def _parse_time(value: str | None) -> datetime | None:
-        if not value:
+    def _parse_time(value: Any) -> datetime | None:
+        if not isinstance(value, str) or not value:
             return None
         try:
             parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-        except ValueError:
+        except (TypeError, ValueError):
             return None
-        return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+        return parsed if parsed.tzinfo else None
 
     def issue(
         self,
@@ -436,8 +436,12 @@ class ContractValidator:
                     )
         return sorted(set(issues))
 
-    @staticmethod
-    def _rights_allowed(rights: dict[str, Any], purpose: str) -> bool:
+    def _rights_allowed(
+        self,
+        rights: dict[str, Any],
+        purpose: str,
+        evaluated_at: datetime,
+    ) -> bool:
         if rights.get("rights_status") in FAIL_CLOSED_RIGHTS:
             return False
         if rights.get("rights_status") not in {"approved", "approved_limited"}:
@@ -448,6 +452,15 @@ class ContractValidator:
         )
         if not retention_allowed:
             return False
+        if isinstance(retention, dict):
+            scope = retention.get("scope")
+            if scope is not None and scope != purpose:
+                return False
+            expires_at = retention.get("expires_at")
+            if expires_at is not None:
+                expires = self._parse_time(expires_at)
+                if expires is None or expires <= evaluated_at:
+                    return False
         if purpose == "training":
             return rights.get("training_allowed") is True
         if purpose == "runtime":
@@ -668,7 +681,9 @@ class ContractValidator:
                     )
                 )
             rights = by_id.get(decision.get("rights_metadata_id"))
-            if rights is None or not self._rights_allowed(rights, "training"):
+            if rights is None or not self._rights_allowed(
+                rights, "training", evaluated_at
+            ):
                 issues.append(
                     self.issue(
                         "RIGHTS_FAILURE",
@@ -904,7 +919,7 @@ class ContractValidator:
         if (
             rights is None
             or rights.get("schema_name") != "rights_metadata"
-            or not self._rights_allowed(rights, "runtime")
+            or not self._rights_allowed(rights, "runtime", evaluated_at)
         ):
             issues.append(
                 self.issue(
@@ -986,17 +1001,36 @@ class ContractValidator:
                 )
             elif object_id:
                 by_id[object_id] = obj
-        evaluated_at = self._parse_time(scenario.get("evaluated_at")) or datetime.now(
-            timezone.utc
-        )
-        for dataset in by_kind.get("dataset_version", []):
-            if dataset.get("training_allowed") or dataset.get("status") == "frozen":
+        gated_datasets = [
+            dataset
+            for dataset in by_kind.get("dataset_version", [])
+            if dataset.get("training_allowed") or dataset.get("status") == "frozen"
+        ]
+        promoted_models = [
+            model
+            for model in by_kind.get("model_version", [])
+            if model.get("runtime_allowed")
+        ]
+        evaluated_at = self._parse_time(scenario.get("evaluated_at"))
+        if (gated_datasets or promoted_models) and evaluated_at is None:
+            issues.append(
+                self.issue(
+                    "SCENARIO_INVALID",
+                    scenario,
+                    "$.evaluated_at",
+                    "explicit timezone-aware evaluation time",
+                    "Dataset and Runtime gates require a valid evaluated_at timestamp.",
+                    kind="scenario",
+                )
+            )
+        if evaluated_at is not None:
+            for dataset in gated_datasets:
                 issues.extend(
                     self._dataset_gate_issues(dataset, by_kind, by_id, evaluated_at)
                 )
         integrity = scenario.get("manifest_integrity", {})
-        for model in by_kind.get("model_version", []):
-            if model.get("runtime_allowed"):
+        if evaluated_at is not None:
+            for model in promoted_models:
                 issues.extend(
                     self._runtime_issues(model, by_kind, by_id, integrity, evaluated_at)
                 )

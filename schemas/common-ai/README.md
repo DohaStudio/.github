@@ -70,6 +70,11 @@ traces, credentials, raw Provider responses, or artifact payloads.
 - TrainingEligibility cannot grant runtime authority, and
   ProviderCapability cannot expose endpoint, credential, token, or path data.
 
+Dataset and Runtime scenarios require an explicit timezone-aware `evaluated_at`.
+If `retention_allowed.expires_at` is earlier than or equal to that instant, the
+Rights check fails closed; a later expiry remains subject to every other Rights
+and purpose constraint.
+
 Manifest checks validate declared identity and synthetic integrity evidence.
 This package does not read artifact bytes, contact schema IDs, inspect a model
 registry, or prove that an external checksum matches production storage.

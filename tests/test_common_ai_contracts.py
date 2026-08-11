@@ -152,6 +152,87 @@ class CommonAIContractTests(unittest.TestCase):
         codes = {issue.code for issue in self.validator.validate_scenario(scenario)}
         self.assertIn("MANIFEST_IDENTITY_MISMATCH", codes)
 
+    def test_rights_retention_expiration_boundaries(self) -> None:
+        base = load_json(FIXTURES / "scenarios" / "runtime-promotion.json")
+        evaluated_at = self.validator._parse_time(base["evaluated_at"])
+        self.assertIsNotNone(evaluated_at)
+        rights_by_id = {item.get("object_id"): item for item in base["objects"]}
+
+        for purpose, object_id in (
+            ("training", "rights_train"),
+            ("runtime", "rights_runtime"),
+        ):
+            for expires_at in (
+                "2026-08-11T11:59:59Z",
+                "2026-08-11T12:00:00Z",
+            ):
+                with self.subTest(purpose=purpose, expires_at=expires_at):
+                    rights = copy.deepcopy(rights_by_id[object_id])
+                    rights["retention_allowed"] = {
+                        "allowed": True,
+                        "expires_at": expires_at,
+                        "scope": purpose,
+                    }
+                    self.assertFalse(
+                        self.validator._rights_allowed(rights, purpose, evaluated_at)
+                    )
+
+            future = copy.deepcopy(rights_by_id[object_id])
+            future["retention_allowed"] = {
+                "allowed": True,
+                "expires_at": "2027-08-11T00:00:00+09:00",
+                "scope": purpose,
+            }
+            self.assertTrue(
+                self.validator._rights_allowed(future, purpose, evaluated_at)
+            )
+            future["retention_allowed"]["scope"] = f"not_{purpose}"
+            self.assertFalse(
+                self.validator._rights_allowed(future, purpose, evaluated_at)
+            )
+
+        for object_id in ("rights_train", "rights_runtime"):
+            with self.subTest(malformed=object_id):
+                scenario = copy.deepcopy(base)
+                rights = next(
+                    item
+                    for item in scenario["objects"]
+                    if item["object_id"] == object_id
+                )
+                rights["retention_allowed"] = {
+                    "allowed": True,
+                    "expires_at": "not-a-date",
+                    "scope": "training" if object_id == "rights_train" else "runtime",
+                }
+                issues = self.validator.validate_scenario(scenario)
+                codes = {issue.code for issue in issues}
+                self.assertIn("RIGHTS_FAILURE", codes)
+
+        expired = copy.deepcopy(base)
+        rights = next(
+            item for item in expired["objects"] if item["object_id"] == "rights_train"
+        )
+        rights["retention_allowed"] = {
+            "allowed": True,
+            "expires_at": "2026-08-11T12:00:00Z",
+            "scope": "training",
+        }
+        first = self.validator.validate_scenario(expired)
+        second = self.validator.validate_scenario(expired)
+        self.assertEqual(first, second)
+        self.assertIn("RIGHTS_FAILURE", {issue.code for issue in first})
+
+    def test_gated_scenarios_require_explicit_evaluation_time(self) -> None:
+        for evaluated_at in (None, "not-a-date", "2026-08-11T12:00:00"):
+            with self.subTest(evaluated_at=evaluated_at):
+                scenario = load_json(FIXTURES / "scenarios" / "runtime-promotion.json")
+                if evaluated_at is None:
+                    del scenario["evaluated_at"]
+                else:
+                    scenario["evaluated_at"] = evaluated_at
+                issues = self.validator.validate_scenario(scenario)
+                self.assertIn("SCENARIO_INVALID", {issue.code for issue in issues})
+
     def test_forward_minor_uses_extensions_only(self) -> None:
         scenario = materialize(
             load_json(FIXTURES / "scenarios" / "runtime-promotion.json")
