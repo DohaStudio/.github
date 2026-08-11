@@ -20,7 +20,8 @@
 - [Common Contract ADR Index](decisions/README.md)
 - [Common Contract 정합성 검토](validation/common-ai-contracts-validation.md)
 - [Common AI Contract Schema v1](../schemas/common-ai/README.md)
+- [Common AI Contract Python package](common-ai-python-package.md)
 
 Contribution·보안·지원은 [CONTRIBUTING](../CONTRIBUTING.md), [SECURITY](../SECURITY.md), [SUPPORT](../SUPPORT.md)를 확인합니다.
 
-이번 Common Contract 변경은 문서 계약만 정의하며 Schema file, code, API, Runtime, Training, Dataset, Worker, Job과 DB를 구현하지 않습니다.
+Common Contract의 Runtime·API·Training·Dataset·Worker·Job·DB 구현은 각 소비자 저장소의 후속 범위입니다. 이 저장소는 권위 문서·Schema와 Python 배포 package를 관리합니다.
