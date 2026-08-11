@@ -1,0 +1,61 @@
+{
+  "scenario_id": "manifest_supersession_valid",
+  "envelope_defaults": {
+    "schema_version": "1.0.0",
+    "created_at": "2026-08-11T00:00:00Z",
+    "created_by": "actor_test",
+    "producer": {"name": "synthetic-fixture", "version": "1.0.0"}
+  },
+  "objects": [],
+  "transitions": [
+    {
+      "previous": {
+        "schema_name": "dataset_manifest",
+        "object_id": "dataset_manifest_old",
+        "dataset_manifest_id": "dataset_manifest_old",
+        "manifest_status": "issued",
+        "manifest_format_version": "1.0.0",
+        "source_dataset_version_id": "dataset_version_old",
+        "source_dataset_version_checksum": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "dataset_id": "dataset_lyrics",
+        "dataset_version": "1.0.0",
+        "dataset_domain": "lm",
+        "source": {"alias": "synthetic"},
+        "license_status": "APPROVED",
+        "training_allowed": true,
+        "commercial_usage_status": "REVIEW_REQUIRED",
+        "redistribution_allowed": false,
+        "item_count": 3,
+        "manifest_checksum": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "object_file_artifact_refs": [{"object_id": "artifact_old", "schema_name": "artifact", "schema_version": "1.0.0"}],
+        "content_checksum_set_id": "checksum_set_old",
+        "split_id": "split_old",
+        "deletion_status": "active"
+      },
+      "current": {
+        "schema_name": "dataset_manifest",
+        "object_id": "dataset_manifest_new",
+        "dataset_manifest_id": "dataset_manifest_new",
+        "manifest_status": "issued",
+        "manifest_format_version": "1.0.0",
+        "source_dataset_version_id": "dataset_version_new",
+        "source_dataset_version_checksum": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "dataset_id": "dataset_lyrics",
+        "dataset_version": "1.1.0",
+        "dataset_domain": "lm",
+        "source": {"alias": "synthetic"},
+        "license_status": "APPROVED",
+        "training_allowed": true,
+        "commercial_usage_status": "REVIEW_REQUIRED",
+        "redistribution_allowed": false,
+        "item_count": 4,
+        "manifest_checksum": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "object_file_artifact_refs": [{"object_id": "artifact_new", "schema_name": "artifact", "schema_version": "1.0.0"}],
+        "content_checksum_set_id": "checksum_set_new",
+        "split_id": "split_new",
+        "supersedes": "dataset_manifest_old",
+        "deletion_status": "active"
+      }
+    }
+  ]
+}

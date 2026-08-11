@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.dohastudio.org/common-ai/v1/model-version.schema.json",
+  "title": "ModelVersion v1",
+  "allOf": [{"$ref": "common-envelope.schema.json"}],
+  "type": "object",
+  "required": ["model_id", "model_version", "status", "base", "training_run_id", "evaluation_run_ids", "model_manifest_id", "rights_policy_eligibility_id", "supported_capability_ids", "runtime", "approval", "runtime_allowed", "deprecated", "artifact_manifest_ids"],
+  "properties": {
+    "schema_name": {"const": "model_version"},
+    "model_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "model_version": {"$ref": "common-envelope.schema.json#/$defs/semver"},
+    "status": {"enum": ["draft", "evaluated", "approved", "runtime_allowed", "deprecated"]},
+    "base": {"type": "object", "required": ["model_id", "revision", "license_status", "checksum"], "properties": {"model_id": {"$ref": "common-envelope.schema.json#/$defs/id"}, "revision": {"type": "string"}, "license_status": {"enum": ["UNKNOWN", "REVIEW_REQUIRED", "APPROVED", "REJECTED"]}, "checksum": {"$ref": "common-envelope.schema.json#/$defs/checksum"}}, "additionalProperties": false},
+    "adapter": {"type": "object", "required": ["adapter_id", "format", "checksum"], "properties": {"adapter_id": {"$ref": "common-envelope.schema.json#/$defs/id"}, "format": {"type": "string"}, "checksum": {"$ref": "common-envelope.schema.json#/$defs/checksum"}}, "additionalProperties": false},
+    "training_run_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "evaluation_run_ids": {"type": "array", "items": {"$ref": "common-envelope.schema.json#/$defs/id"}, "minItems": 1, "uniqueItems": true},
+    "model_manifest_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "rights_policy_eligibility_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "supported_capability_ids": {"type": "array", "items": {"$ref": "common-envelope.schema.json#/$defs/id"}, "minItems": 1, "uniqueItems": true},
+    "runtime": {"type": "object", "required": ["framework", "precision", "device", "compatibility"], "properties": {"framework": {"type": "string"}, "precision": {"type": "string"}, "device": {"type": "string"}, "compatibility": {"enum": ["pass", "fail", "unknown"]}}, "additionalProperties": false},
+    "approval": {"$ref": "common-envelope.schema.json#/$defs/approval"},
+    "runtime_allowed": {"type": "boolean"},
+    "deprecated": {"type": "boolean"},
+    "superseded_by": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "artifact_manifest_ids": {"type": "array", "items": {"$ref": "common-envelope.schema.json#/$defs/id"}, "minItems": 1, "uniqueItems": true}
+  },
+  "if": {"properties": {"runtime_allowed": {"const": true}}},
+  "then": {"properties": {"status": {"const": "runtime_allowed"}, "deprecated": {"const": false}, "approval": {"properties": {"status": {"const": "approved"}}}, "runtime": {"properties": {"compatibility": {"const": "pass"}}}}},
+  "unevaluatedProperties": false
+}

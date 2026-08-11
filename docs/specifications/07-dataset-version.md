@@ -42,6 +42,7 @@
 - `status=frozen`에는 `approved=true`, `training_allowed=true`, 발행된 DatasetManifest와 Version/Manifest content identity 일치가 필요합니다.
 - TrainingRun은 `status=frozen`, `approved=true`, `frozen=true`, `training_allowed=true`인 DatasetVersion만 사용할 수 있습니다.
 - split은 source/user/project/reference group 누수를 차단합니다.
+- 포함 Candidate는 모두 group key를 가져야 하며, ID가 달라도 같은 content fingerprint를 여러 split에 둘 수 없습니다.
 - item, preprocessing, split 또는 권리 판단 변경은 새 dataset version을 발급합니다.
 - frozen DatasetVersion의 포함 항목·split·checksum을 제자리 수정하거나 revoked candidate만 삭제하지 않습니다. 새 Version과 `supersedes` lineage를 발급합니다.
 - Freeze 후 권리 철회는 기존 Version·Manifest를 삭제하지 않고 append-only rights/lineage event와 replacement DatasetVersion으로 처리합니다.

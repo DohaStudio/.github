@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.dohastudio.org/common-ai/v1/common-envelope.schema.json",
+  "title": "DohaStudio Common AI Contract Envelope v1",
+  "type": "object",
+  "required": ["schema_name", "schema_version", "object_id", "created_at", "created_by", "producer"],
+  "properties": {
+    "schema_name": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "schema_version": {"$ref": "#/$defs/semver"},
+    "object_id": {"$ref": "#/$defs/id"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "created_by": {"$ref": "#/$defs/id"},
+    "producer": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {"name": {"type": "string", "minLength": 1}, "version": {"$ref": "#/$defs/semver"}},
+      "additionalProperties": false
+    },
+    "correlation_id": {"$ref": "#/$defs/id"},
+    "workspace_id": {"$ref": "#/$defs/id"},
+    "job_id": {"$ref": "#/$defs/id"},
+    "extensions": {"type": "object", "propertyNames": {"pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9_-]*)+$"}}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 2, "maxLength": 128, "pattern": "^[A-Za-z][A-Za-z0-9._:-]+$"},
+    "semver": {"type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"},
+    "checksum": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "reference": {
+      "type": "object",
+      "required": ["object_id", "schema_name", "schema_version"],
+      "properties": {
+        "object_id": {"$ref": "#/$defs/id"},
+        "schema_name": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+        "schema_version": {"$ref": "#/$defs/semver"},
+        "content_fingerprint": {"$ref": "#/$defs/checksum"}
+      },
+      "additionalProperties": false
+    },
+    "approval": {
+      "type": "object",
+      "required": ["status", "evidence_ids"],
+      "properties": {"status": {"enum": ["pending", "approved", "rejected"]}, "evidence_ids": {"type": "array", "items": {"$ref": "#/$defs/id"}, "uniqueItems": true}},
+      "additionalProperties": false
+    }
+  }
+}

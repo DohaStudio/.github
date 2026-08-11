@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.dohastudio.org/common-ai/v1/rights-metadata.schema.json",
+  "title": "RightsMetadata v1",
+  "allOf": [{"$ref": "common-envelope.schema.json"}],
+  "type": "object",
+  "required": ["rights_metadata_id", "source_type", "rights_status", "user_created", "generated", "reference", "uploaded", "external", "analysis_allowed", "training_allowed", "redistribution_allowed", "retention_allowed", "derivative_generation_allowed", "consent_evidence_refs", "jurisdiction", "reviewed_at", "reviewed_by"],
+  "properties": {
+    "schema_name": {"const": "rights_metadata"},
+    "rights_metadata_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "source_type": {"enum": ["user_created", "generated", "reference", "uploaded", "external", "mixed"]},
+    "rights_status": {"enum": ["unknown", "pending_review", "approved_limited", "approved", "rejected", "expired", "revoked"]},
+    "user_created": {"$ref": "#/$defs/source_flag"},
+    "generated": {"$ref": "#/$defs/source_flag"},
+    "reference": {"$ref": "#/$defs/source_flag"},
+    "uploaded": {"$ref": "#/$defs/source_flag"},
+    "external": {"$ref": "#/$defs/source_flag"},
+    "analysis_allowed": {"type": "boolean"},
+    "training_allowed": {"type": "boolean"},
+    "redistribution_allowed": {"type": "boolean"},
+    "retention_allowed": {"oneOf": [{"type": "boolean"}, {"type": "object", "required": ["allowed", "expires_at", "scope"], "properties": {"allowed": {"type": "boolean"}, "expires_at": {"type": "string", "format": "date-time"}, "scope": {"enum": ["training", "runtime"]}}, "additionalProperties": false}]},
+    "derivative_generation_allowed": {"type": "boolean"},
+    "consent_evidence_refs": {"type": "array", "items": {"$ref": "common-envelope.schema.json#/$defs/id"}, "uniqueItems": true},
+    "jurisdiction": {"type": "string", "minLength": 2},
+    "reviewed_at": {"type": "string", "format": "date-time"},
+    "reviewed_by": {"$ref": "common-envelope.schema.json#/$defs/id"}
+  },
+  "$defs": {"source_flag": {"oneOf": [{"type": "boolean"}, {"type": "object", "required": ["value", "evidence_refs"], "properties": {"value": {"type": "boolean"}, "evidence_refs": {"type": "array", "items": {"$ref": "common-envelope.schema.json#/$defs/id"}, "uniqueItems": true}}, "additionalProperties": false}]}},
+  "unevaluatedProperties": false
+}

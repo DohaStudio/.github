@@ -44,6 +44,7 @@
 - capability 목록은 실제 구현 상태를 과장하지 않습니다.
 - capability ID 의미 변경은 새 major version 또는 새 ID를 사용합니다.
 - endpoint, credential, access token, 내부 model/storage 경로, signed URL, raw Provider error나 stack trace를 포함하지 않습니다.
+- 이 금지는 중첩 `constraints`에도 적용하며 대소문자, underscore, hyphen 차이로 민감 키를 우회할 수 없습니다.
 
 ## 변경 이력
 

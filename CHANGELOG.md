@@ -4,6 +4,8 @@
 
 ### 문서
 
+- ORG-02 Common AI Contract Schema v1, 로컬 호환성 검증기와 합성 positive/negative fixture를 추가했습니다.
+
 - DohaStudio Organization Profile과 AI 음악 생태계 문서 기준선을 정리했습니다.
 - 공통 명세 10종을 `specification_version: 0.1.0`, `status: draft-baseline`으로 정의했습니다.
 - Common Music AI 객체 13종, Version/Manifest 권위, Candidate/Dataset/Runtime Gate와 immutable lineage 계약을 제안했습니다.

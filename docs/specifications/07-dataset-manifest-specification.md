@@ -54,6 +54,8 @@ Split은 `train`, `validation`, `test`와 필요 시 domain 확장 집합을 정
 
 Dataset 구성이나 권리 판단이 달라지면 새 DatasetVersion과 새 DatasetManifest를 발급합니다. 논리 DatasetVersion은 같지만 발행 evidence 오류를 정정해야 하는 예외는 새 Manifest ID와 canonical `supersedes` 관계를 사용하며 source DatasetVersion approval을 변경할 수 없습니다. 기존 Version·Manifest를 삭제하거나 덮어쓰지 않습니다.
 
+같은 source DatasetVersion의 issued replacement는 root와 tip이 각각 하나인 단일 선형 `supersedes` chain이어야 하며 branch, merge, cycle, self-reference, 누락되거나 분리된 predecessor를 허용하지 않습니다.
+
 ## 7. Git 정책
 
 - Schema, 설정 예제, 권리 검토 양식과 합법적 소형 fixture는 Git에 포함할 수 있습니다.

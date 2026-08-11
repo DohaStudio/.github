@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.dohastudio.org/common-ai/v1/dataset-manifest.schema.json",
+  "title": "DatasetManifest v1",
+  "allOf": [{"$ref": "common-envelope.schema.json"}],
+  "type": "object",
+  "required": ["dataset_manifest_id", "manifest_status", "manifest_format_version", "source_dataset_version_id", "source_dataset_version_checksum", "dataset_id", "dataset_version", "dataset_domain", "source", "license_status", "training_allowed", "commercial_usage_status", "redistribution_allowed", "item_count", "manifest_checksum", "object_file_artifact_refs", "content_checksum_set_id", "split_id", "deletion_status"],
+  "properties": {
+    "schema_name": {"const": "dataset_manifest"},
+    "dataset_manifest_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "manifest_status": {"enum": ["draft", "issued"]},
+    "manifest_format_version": {"$ref": "common-envelope.schema.json#/$defs/semver"},
+    "source_dataset_version_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "source_dataset_version_checksum": {"$ref": "common-envelope.schema.json#/$defs/checksum"},
+    "dataset_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "dataset_version": {"$ref": "common-envelope.schema.json#/$defs/semver"},
+    "dataset_domain": {"enum": ["lm", "audio", "vocal"]},
+    "source": {"type": "object", "minProperties": 1},
+    "license_status": {"enum": ["UNKNOWN", "REVIEW_REQUIRED", "APPROVED", "REJECTED"]},
+    "training_allowed": {"type": "boolean"},
+    "commercial_usage_status": {"enum": ["UNKNOWN", "REVIEW_REQUIRED", "APPROVED", "REJECTED"]},
+    "redistribution_allowed": {"type": "boolean"},
+    "item_count": {"type": "integer", "minimum": 1},
+    "manifest_checksum": {"$ref": "common-envelope.schema.json#/$defs/checksum"},
+    "object_file_artifact_refs": {"type": "array", "items": {"$ref": "common-envelope.schema.json#/$defs/reference"}, "minItems": 1},
+    "content_checksum_set_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "split_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "supersedes": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "deletion_status": {"enum": ["active", "review_required", "revoked"]}
+  },
+  "unevaluatedProperties": false
+}

@@ -5,14 +5,14 @@
 
 ## 현재 단계
 
-이번 PR은 문서 계약만 작성합니다. 실제 schema와 Repository별 구현은 시작하지 않습니다.
+PR #5에서 문서 계약을 확정했고, ORG-02는 그 계약의 JSON Schema v1과 로컬 호환성 검증기 및 합성 fixture를 구현합니다. Repository별 Runtime·API·DB·Dataset·Provider 구현은 시작하지 않습니다.
 
 ## 후속 단계
 
 | 단계 | 범위 | 완료 기준 |
 |---|---|---|
 | 1. Contract Review | 13개 객체·ADR 검토 | 용어·권리·책임 경계 승인 |
-| 2. Schema Package | JSON Schema와 호환성 fixture | positive/negative validation 통과 |
+| 2. Schema Package | JSON Schema와 호환성 fixture | ORG-02 Draft PR에서 positive/negative validation 검증 중 |
 | 3. Repository Mapping | DohaLM/Music/Audio/Vocal 내부 모델 mapping | 공통 의미를 보존한 adapter 설계 |
 | 4. Capability Discovery | ProviderCapability 조회 계약 | 지원 version·상태 일치 |
 | 5. Learning Governance | Candidate·Rights·Eligibility registry | 자동 승인 없는 audit trail |
@@ -23,7 +23,7 @@
 
 ## 권장 다음 PR
 
-PR #5가 검토·병합된 뒤 `ORG-02: Common AI Contract Schema v1`을 권장합니다. Common Envelope, MusicIntent, ProviderCapability, RightsMetadata, TrainingEligibility의 JSON Schema, schema version policy, compatibility validator와 synthetic valid/invalid fixture만 포함합니다.
+ORG-02 병합 전에는 Schema Package의 검토와 합성 fixture 회귀 검증을 완료합니다. 병합 뒤 다음 단계는 별도 Repository Mapping PR이며, 이 PR만으로 Runtime·API·DB·Dataset·Provider 작업을 승인하지 않습니다.
 
 ## 변경 이력
 

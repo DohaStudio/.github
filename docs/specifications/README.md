@@ -6,6 +6,8 @@
 > 구현 상태: 문서 기준선이며 Runtime·API·DB 구현 완료를 의미하지 않음
 > Common Contracts 확장 후보: `0.2.0-draft`
 
+`0.2.0-draft`는 조직 문서 계약의 버전입니다. 직렬화 객체의 `schema_version: 1.x.y`와는 별도 축이며, ORG-02 구현 및 실행 방법은 [Common AI Contract Schema v1](../../schemas/common-ai/README.md)을 참조합니다.
+
 ## 목적
 
 이 문서는 DohaStudio 생태계가 공통으로 참조하는 Asset, Artifact, Job, Provider와 Manifest 계약의 기준 버전을 정의합니다. `0.1.0`은 구현 전 상호 검토를 위한 초안 기준선이며 안정 API를 뜻하는 `1.0.0`이 아닙니다.
