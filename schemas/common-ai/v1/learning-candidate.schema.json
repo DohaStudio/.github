@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.dohastudio.org/common-ai/v1/learning-candidate.schema.json",
+  "title": "LearningCandidate v1",
+  "allOf": [{"$ref": "common-envelope.schema.json"}],
+  "type": "object",
+  "required": ["candidate_id", "source_type", "task", "status", "input_refs", "output_refs", "rights_metadata_id", "review_evidence_ids", "content_fingerprint", "parent_candidate_ids"],
+  "properties": {
+    "schema_name": {"const": "learning_candidate"},
+    "candidate_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "source_type": {"enum": ["human_authored", "ai_generated", "human_edited", "preference", "reference_analysis", "similarity_revision", "track_edit", "section_edit", "mix_edit", "prompt_edit", "planning"]},
+    "task": {"type": "string", "minLength": 1},
+    "status": {"enum": ["draft", "submitted", "in_review", "approved", "rejected", "included_in_dataset", "trained"]},
+    "input_refs": {"type": "array", "items": {"$ref": "common-envelope.schema.json#/$defs/reference"}},
+    "output_refs": {"type": "array", "items": {"$ref": "common-envelope.schema.json#/$defs/reference"}, "minItems": 1},
+    "rights_metadata_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "review_evidence_ids": {"type": "array", "items": {"$ref": "common-envelope.schema.json#/$defs/id"}, "uniqueItems": true},
+    "content_fingerprint": {"$ref": "common-envelope.schema.json#/$defs/checksum"},
+    "parent_candidate_ids": {"type": "array", "items": {"$ref": "common-envelope.schema.json#/$defs/id"}, "uniqueItems": true}
+  },
+  "unevaluatedProperties": false
+}

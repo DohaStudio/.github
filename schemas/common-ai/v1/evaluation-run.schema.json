@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.dohastudio.org/common-ai/v1/evaluation-run.schema.json",
+  "title": "EvaluationRun v1",
+  "allOf": [{"$ref": "common-envelope.schema.json"}],
+  "type": "object",
+  "required": ["evaluation_run_id", "training_run_id", "checkpoint_ref", "evaluation_dataset_version_ids", "metric_manifest_ids", "metric_results", "human_review", "similarity_report_ids", "rights_review", "status", "approval", "limitations"],
+  "properties": {
+    "schema_name": {"const": "evaluation_run"},
+    "evaluation_run_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "training_run_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "checkpoint_ref": {"$ref": "common-envelope.schema.json#/$defs/reference"},
+    "evaluation_dataset_version_ids": {"type": "array", "items": {"$ref": "common-envelope.schema.json#/$defs/id"}, "minItems": 1, "uniqueItems": true},
+    "metric_manifest_ids": {"type": "array", "items": {"$ref": "common-envelope.schema.json#/$defs/id"}, "minItems": 1, "uniqueItems": true},
+    "metric_results": {"type": "object", "minProperties": 1},
+    "human_review": {"type": "object"},
+    "similarity_report_ids": {"type": "array", "items": {"$ref": "common-envelope.schema.json#/$defs/id"}, "uniqueItems": true},
+    "rights_review": {"enum": ["eligible", "ineligible", "unknown", "expired", "revoked"]},
+    "status": {"enum": ["queued", "running", "completed", "failed", "cancelled"]},
+    "approval": {"$ref": "common-envelope.schema.json#/$defs/approval"},
+    "limitations": {"type": "array", "items": {"type": "string"}}
+  },
+  "unevaluatedProperties": false
+}

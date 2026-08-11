@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.dohastudio.org/common-ai/v1/music-intent.schema.json",
+  "title": "MusicIntent v1",
+  "allOf": [{"$ref": "common-envelope.schema.json"}],
+  "type": "object",
+  "required": ["intent_id", "operation", "target", "instruction", "preserve", "replace", "constraints", "priority", "requested_capability"],
+  "properties": {
+    "schema_name": {"const": "music_intent"},
+    "intent_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "operation": {"enum": ["regenerate", "replace", "extend", "shorten", "rewrite", "mix", "analyze", "reference", "similarity_revision", "planning"]},
+    "target": {
+      "type": "object",
+      "required": ["project_id"],
+      "properties": {
+        "project_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+        "asset_version_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+        "track_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+        "section_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+        "time_range": {"type": "object", "required": ["start", "end", "unit"], "properties": {"start": {"type": "number", "minimum": 0}, "end": {"type": "number", "exclusiveMinimum": 0}, "unit": {"enum": ["seconds", "beats", "frames"]}}, "additionalProperties": false}
+      },
+      "additionalProperties": false
+    },
+    "instruction": {"oneOf": [{"type": "string", "minLength": 1}, {"type": "object", "minProperties": 1}]},
+    "preserve": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "replace": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "constraints": {"type": "array", "items": {"type": "object"}},
+    "priority": {"enum": ["low", "normal", "high", "critical"]},
+    "requested_capability": {"$ref": "common-envelope.schema.json#/$defs/id"}
+  },
+  "unevaluatedProperties": false
+}

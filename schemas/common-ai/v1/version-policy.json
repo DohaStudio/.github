@@ -1,0 +1,13 @@
+{
+  "policy_version": "1.0.0",
+  "supported_major": 1,
+  "minimum_minor": 0,
+  "maximum_minor": null,
+  "patch_policy": "compatible",
+  "minor_policy": "forward-compatible only through namespaced extensions",
+  "unknown_major_policy": "reject",
+  "unknown_core_field_policy": "reject",
+  "enum_extension_policy": "reject until the schema registry is updated",
+  "deprecated_versions": [],
+  "schema_id_prefix": "https://schemas.dohastudio.org/common-ai/v1/"
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.dohastudio.org/common-ai/v1/training-run.schema.json",
+  "title": "TrainingRun v1",
+  "allOf": [{"$ref": "common-envelope.schema.json"}],
+  "type": "object",
+  "required": ["training_run_id", "dataset_version_ref", "dataset_manifest_id", "base_model_version_id", "adapter_strategy", "hyperparameters", "seed", "source_commit", "environment_manifest_id", "status", "checkpoint_refs", "metrics_refs"],
+  "properties": {
+    "schema_name": {"const": "training_run"},
+    "training_run_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "dataset_version_ref": {"$ref": "common-envelope.schema.json#/$defs/reference"},
+    "dataset_manifest_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "base_model_version_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "adapter_strategy": {"type": "string", "minLength": 1},
+    "hyperparameters": {"type": "object"},
+    "seed": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "integer"}},
+    "source_commit": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "environment_manifest_id": {"$ref": "common-envelope.schema.json#/$defs/id"},
+    "status": {"enum": ["queued", "running", "succeeded", "failed", "cancelled"]},
+    "checkpoint_refs": {"type": "array", "items": {"$ref": "common-envelope.schema.json#/$defs/reference"}},
+    "metrics_refs": {"type": "array", "items": {"$ref": "common-envelope.schema.json#/$defs/reference"}},
+    "failure": {"type": "object", "required": ["code", "stage", "summary"], "properties": {"code": {"type": "string"}, "stage": {"type": "string"}, "summary": {"type": "string"}}, "additionalProperties": false}
+  },
+  "if": {"properties": {"status": {"const": "failed"}}},
+  "then": {"required": ["failure"]},
+  "unevaluatedProperties": false
+}
