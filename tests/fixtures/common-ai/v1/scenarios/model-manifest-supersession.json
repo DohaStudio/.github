@@ -1,0 +1,68 @@
+{
+  "envelope_defaults": {
+    "schema_version": "1.0.0",
+    "created_at": "2026-08-11T00:00:00Z",
+    "created_by": "synthetic_reviewer",
+    "producer": {"name": "org-contract-fixture", "version": "1.0.0"}
+  },
+  "objects": [],
+  "transitions": [
+    {
+      "previous": {
+        "schema_name": "model_manifest",
+        "object_id": "model_manifest_old",
+        "model_manifest_id": "model_manifest_old",
+        "manifest_status": "issued",
+        "manifest_format_version": "1.0.0",
+        "source_model_version_id": "model_version_old",
+        "source_model_version_checksum": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "provider_id": "dohalm",
+        "model_id": "model_synthetic",
+        "model_version": "1.0.0",
+        "checkpoint_version": "checkpoint-old",
+        "model_type": "synthetic_test",
+        "capabilities": ["synthetic_capability"],
+        "input_formats": ["application/json"],
+        "output_formats": ["application/json"],
+        "api_contract_version": "1.0.0",
+        "dataset_manifest_id": "dataset_manifest_old",
+        "training_run_id": "training_run_old",
+        "evaluation_run_ids": ["evaluation_run_old"],
+        "license_status": "APPROVED",
+        "commercial_usage_status": "REVIEW_REQUIRED",
+        "recommended_vram": 0,
+        "runtime_environment": {"framework": "synthetic", "version": "1.0.0"},
+        "artifact_checksum": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "manifest_checksum": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "current": {
+        "schema_name": "model_manifest",
+        "object_id": "model_manifest_new",
+        "model_manifest_id": "model_manifest_new",
+        "manifest_status": "issued",
+        "manifest_format_version": "1.0.0",
+        "source_model_version_id": "model_version_new",
+        "source_model_version_checksum": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+        "provider_id": "dohalm",
+        "model_id": "model_synthetic",
+        "model_version": "1.1.0",
+        "checkpoint_version": "checkpoint-new",
+        "model_type": "synthetic_test",
+        "capabilities": ["synthetic_capability"],
+        "input_formats": ["application/json"],
+        "output_formats": ["application/json"],
+        "api_contract_version": "1.0.0",
+        "dataset_manifest_id": "dataset_manifest_new",
+        "training_run_id": "training_run_new",
+        "evaluation_run_ids": ["evaluation_run_new"],
+        "license_status": "APPROVED",
+        "commercial_usage_status": "REVIEW_REQUIRED",
+        "recommended_vram": 0,
+        "runtime_environment": {"framework": "synthetic", "version": "1.0.0"},
+        "artifact_checksum": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+        "manifest_checksum": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+        "supersedes": "model_manifest_old"
+      }
+    }
+  ]
+}
