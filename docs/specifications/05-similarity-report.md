@@ -33,7 +33,7 @@
 
 ## 3. Risk
 
-`risk.level`은 `unknown`, `low`, `medium`, `high`, `blocked`를 사용합니다. `blocked`는 제품 정책상 자동 진행을 중단한다는 뜻이며 법적 침해 확정이 아닙니다. threshold는 metric version과 calibration evidence에 결속합니다.
+`risk.level`은 `unknown`, `low`, `medium`, `high`, `blocked`를 사용합니다. `blocked`는 높은 위험 신호로 인해 사람의 우선 검토가 필요하다는 분석 분류이며 법적 침해 확정이 아닙니다. SimilarityReport 자체는 생성·저장·배포·게시·Provider 실행을 자동 차단·거부·중단·삭제하거나 승인 상태를 변경하지 않습니다. 실제 진행 제한은 이 객체 밖의 별도 제품 정책 Gate와 권한 있는 주체의 검토로 결정합니다. threshold는 metric version과 calibration evidence에 결속합니다.
 
 ## 4. 불변 조건
 
@@ -41,6 +41,7 @@
 - `overall`만으로 revision 또는 권리 결론을 만들지 않습니다.
 - section risk에는 대상과 reference의 구간 evidence가 필요합니다.
 - `revision_required=true`이면 RevisionPlan 생성 또는 명시적 override review가 필요합니다.
+- Report는 법률 자문이나 제품 승인 source of truth를 대체하지 않습니다.
 - Report를 학습 정답으로 자동 등록하지 않습니다.
 
 ## 변경 이력
