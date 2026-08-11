@@ -666,7 +666,6 @@ class ContractValidator:
                 or decision.get("approved") is not True
                 or decision.get("training_allowed") is not True
                 or any(value in FAIL_CLOSED_CHECKS for value in checks.values())
-                or (expires is not None and expires <= evaluated_at)
             ):
                 issues.append(
                     self.issue(
@@ -675,6 +674,16 @@ class ContractValidator:
                         "$",
                         "eligible unexpired candidate decision",
                         f"Candidate {candidate_id} is not eligible for Dataset inclusion.",
+                    )
+                )
+            if expires is None or expires <= evaluated_at:
+                issues.append(
+                    self.issue(
+                        "DATASET_ELIGIBILITY_FAILURE",
+                        decision,
+                        "$.expires_at",
+                        "timezone-aware unexpired eligibility evidence",
+                        f"Candidate {candidate_id} eligibility expiry is missing, invalid, or expired.",
                     )
                 )
             rights = by_id.get(decision.get("rights_metadata_id"))

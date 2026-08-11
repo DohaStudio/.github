@@ -295,6 +295,65 @@ class CommonAIContractTests(unittest.TestCase):
                 issues = self.validator.validate_scenario(scenario)
                 self.assertIn("SCENARIO_INVALID", {issue.code for issue in issues})
 
+    def test_training_eligibility_expiry_is_fail_closed(self) -> None:
+        base = load_json(FIXTURES / "scenarios" / "runtime-promotion.json")
+        base["evaluated_at"] = "2026-08-11T00:00:00Z"
+        invalid_values = (
+            ("missing", None),
+            ("malformed", "not-a-date"),
+            ("naive", "2026-08-11T12:00:00"),
+            ("expired", "2026-08-10T23:59:59Z"),
+            ("equal_z", "2026-08-11T00:00:00Z"),
+            ("equal_positive_offset", "2026-08-11T09:00:00+09:00"),
+            ("equal_negative_offset", "2026-08-10T19:00:00-05:00"),
+        )
+        eligibility_ids = (
+            "eligibility_train",
+            "eligibility_validation",
+            "eligibility_test",
+        )
+        for eligibility_id in eligibility_ids:
+            for name, expires_at in invalid_values:
+                with self.subTest(eligibility_id=eligibility_id, case=name):
+                    scenario = copy.deepcopy(base)
+                    eligibility = next(
+                        item
+                        for item in scenario["objects"]
+                        if item["object_id"] == eligibility_id
+                    )
+                    if expires_at is None:
+                        del eligibility["expires_at"]
+                    else:
+                        eligibility["expires_at"] = expires_at
+                    first = self.validator.validate_scenario(scenario)
+                    second = self.validator.validate_scenario(scenario)
+                    self.assertEqual(first, second)
+                    matches = [
+                        issue
+                        for issue in first
+                        if issue.code == "DATASET_ELIGIBILITY_FAILURE"
+                        and issue.object_id == eligibility_id
+                        and issue.path == "$.expires_at"
+                        and issue.rule
+                        == "timezone-aware unexpired eligibility evidence"
+                    ]
+                    self.assertTrue(matches, [issue.to_dict() for issue in first])
+
+            for name, expires_at in (
+                ("future_z", "2026-08-11T00:00:01Z"),
+                ("future_positive_offset", "2026-08-11T09:00:01+09:00"),
+                ("future_negative_offset", "2026-08-10T19:00:01-05:00"),
+            ):
+                with self.subTest(eligibility_id=eligibility_id, case=name):
+                    scenario = copy.deepcopy(base)
+                    eligibility = next(
+                        item
+                        for item in scenario["objects"]
+                        if item["object_id"] == eligibility_id
+                    )
+                    eligibility["expires_at"] = expires_at
+                    self.assertEqual([], self.validator.validate_scenario(scenario))
+
     def test_forward_minor_uses_extensions_only(self) -> None:
         scenario = materialize(
             load_json(FIXTURES / "scenarios" / "runtime-promotion.json")

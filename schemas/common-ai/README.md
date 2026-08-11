@@ -71,6 +71,9 @@ traces, credentials, raw Provider responses, or artifact payloads.
   ProviderCapability cannot expose endpoint, credential, token, or path data.
 
 Dataset and Runtime scenarios require an explicit timezone-aware `evaluated_at`.
+Every TrainingEligibility used by a Dataset gate requires a timezone-aware
+`expires_at` later than that instant; missing, malformed, naive, and expired
+eligibility evidence fails the entire Dataset and its Runtime promotion lineage.
 Gated Rights require structured `retention_allowed` evidence with
 `allowed=true`, a purpose-matched `training` or `runtime` scope, and a
 timezone-aware `expires_at`; the legacy Boolean form never grants Dataset or
