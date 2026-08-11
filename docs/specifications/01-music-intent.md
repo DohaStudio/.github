@@ -68,6 +68,9 @@ priority: normal
 requested_capability: vocal_melody_edit
 created_at: 2026-08-11T00:00:00Z
 created_by: user_opaque
+producer:
+  name: doha-music
+  version: 1.0.0
 ```
 
 ## 변경 이력

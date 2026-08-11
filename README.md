@@ -20,6 +20,7 @@
 - [Common Contract Architecture](docs/architecture/common-ai-contracts.md)
 - [Common Contract ADR](docs/decisions/README.md)
 - [Common Contract 정합성 검토](docs/validation/common-ai-contracts-validation.md)
+- [Common AI Contract Schema v1](schemas/common-ai/README.md)
 - [변경 이력](CHANGELOG.md)
 - [Contribution](CONTRIBUTING.md)
 - [Security](SECURITY.md)

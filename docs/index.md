@@ -19,6 +19,7 @@
 - [Common Contract Roadmap](roadmap.md)
 - [Common Contract ADR Index](decisions/README.md)
 - [Common Contract 정합성 검토](validation/common-ai-contracts-validation.md)
+- [Common AI Contract Schema v1](../schemas/common-ai/README.md)
 
 Contribution·보안·지원은 [CONTRIBUTING](../CONTRIBUTING.md), [SECURITY](../SECURITY.md), [SUPPORT](../SUPPORT.md)를 확인합니다.
 
