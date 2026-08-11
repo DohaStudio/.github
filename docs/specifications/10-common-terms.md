@@ -34,11 +34,14 @@
 | `Provider` | DohaMusic이 호출하는 독립 AI 기능 제공자 |
 | `Capability` | Provider가 지원하는 생성·분석·변환 등의 기능 식별자 |
 | `Job` | 비동기 작업 요청, 상태와 결과의 lifecycle 단위 |
-| `Manifest` | Dataset·Model 등의 identity, version, provenance와 검증 근거를 기록한 불변 Metadata |
+| `Version` | identity, lifecycle, approval과 사용 Gate의 논리적 source of truth |
+| `Manifest` | Version의 물리 구성·Artifact·checksum을 재현하는 발행 후 불변 evidence. 독립 lifecycle·approval 권위가 아님 |
 | `Registry` | 여러 Manifest와 상태·관계를 조회하는 관리 index |
 | `Artifact ID` | 물리 경로와 분리된 Artifact 식별자 |
-| `Model Manifest` | 모델·Checkpoint·Dataset·Training·Evaluation·License를 연결한 명세 |
-| `Dataset Manifest` | Dataset version·source·rights·split·checksum을 연결한 명세 |
+| `ModelVersion` | base·adapter·Evaluation·approval·Runtime compatibility와 `runtime_allowed`의 권위 모델 객체 |
+| `Model Manifest` | ModelVersion의 weight·adapter·tokenizer·config·dependency·Artifact digest를 고정한 evidence |
+| `DatasetVersion` | 목적·lineage·approval·집합 eligibility·split·freeze의 권위 Dataset 객체 |
+| `Dataset Manifest` | DatasetVersion의 실제 item·split·Artifact reference·digest를 고정한 evidence |
 | `Checkpoint` | Training 중간 또는 최종 모델 상태 Artifact |
 | `Runtime` | Model을 load하고 Provider Job을 실행하는 환경·process |
 | `Adapter` | 모델 전체를 바꾸지 않고 특정 사용자·task에 맞춘 parameter 또는 구현 계층 |
@@ -54,10 +57,11 @@
 
 ## 3. Repository 용어 경계
 
-- DohaMusic은 Workspace, Project, Asset, AssetVersion, Composition Snapshot, Mix와 Export를 소유합니다.
-- DohaLM은 Lyrics 생성·분석·수정 Provider 도메인을 소유합니다.
-- DohaAudio는 Music generation, Stem separation과 Audio analysis Provider 도메인을 소유합니다.
-- DohaVocal은 Singing voice, Voice conversion과 Vocal processing Provider 도메인을 소유합니다.
+- DohaMusic은 사용자 작업·가사 원본·수정·선택, Rights/Provenance/Consent, LearningCandidate 발생 이력, Workspace·Job·Artifact·Composition lineage를 소유합니다.
+- DohaLM은 DatasetVersion, TrainingRun, EvaluationRun, ModelVersion과 분석 해석·Song Planning·RevisionPlan을 소유합니다.
+- DohaAudio는 음원 Feature 추출과 음악 Similarity 계산을 소유합니다.
+- DohaVocal은 Singing voice, Voice conversion과 vocal-specific Feature/processing을 소유합니다.
+- 이 `.github` Common Specification은 교차 저장소 객체 의미 계약의 권위이며 각 서비스 Runtime 데이터 소유권을 가져가지 않습니다.
 - Provider끼리는 직접 호출하지 않으며 DohaMusic이 orchestration합니다.
 
 ## 4. 용어 사용 규칙
@@ -68,6 +72,8 @@
 - Snapshot은 Asset의 최신 상태가 아니라 정확한 AssetVersion을 참조합니다.
 - Recording Take와 Enrollment Sample을 Training Dataset으로 자동 간주하지 않습니다.
 - Evaluation 통과와 Commercial approval을 같은 상태로 표현하지 않습니다.
+- Candidate eligibility와 Dataset 집합 eligibility를 같은 상태로 표현하지 않습니다.
+- Version과 Manifest를 경쟁하는 source of truth로 표현하지 않습니다.
 - `Legacy`를 삭제 완료 또는 안전 검증 완료 의미로 사용하지 않습니다.
 
 ## 5. Specification 목록

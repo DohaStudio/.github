@@ -16,6 +16,10 @@
 - [Provider Contract](docs/provider-contract.md)
 - [Common Policies](docs/common-policies.md)
 - [공통 명세 기준선](docs/specifications/README.md)
+- [AI Music Common Contracts](docs/ai-music-common-contracts.md)
+- [Common Contract Architecture](docs/architecture/common-ai-contracts.md)
+- [Common Contract ADR](docs/decisions/README.md)
+- [Common Contract 정합성 검토](docs/validation/common-ai-contracts-validation.md)
 - [변경 이력](CHANGELOG.md)
 - [Contribution](CONTRIBUTING.md)
 - [Security](SECURITY.md)
@@ -29,3 +33,10 @@
 - [DohaVocal](https://github.com/DohaStudio/DohaVocal)
 
 모든 기능 상태는 각 Repository 문서를 기준으로 판단합니다. Organization 문서는 구현되지 않은 Runtime·Provider 기능을 완료된 것으로 표시하지 않습니다.
+
+## Common Contract 안전 경계
+
+- Reference Audio를 직접 학습하지 않습니다.
+- 학습은 승인된 FeatureRecord와 사용자 작업·수정·선택을 기반으로 합니다.
+- SimilarityReport는 창작 지원 분석이며 법적 판정이 아닙니다.
+- `training_allowed`와 `ModelVersion.runtime_allowed`는 서로 다른 Gate입니다.

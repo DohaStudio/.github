@@ -4,6 +4,7 @@
 > 상태: `draft-baseline`
 > 적용일: 2026-08-06
 > 구현 상태: 문서 기준선이며 Runtime·API·DB 구현 완료를 의미하지 않음
+> Common Contracts 확장 후보: `0.2.0-draft`
 
 ## 목적
 
@@ -54,3 +55,36 @@
 ## 라이선스와 권리
 
 이 명세를 포함한 저장소 코드·문서는 [Apache License 2.0](../../LICENSE)을 적용합니다. Dataset, 외부 모델, 모델 가중치, Adapter, Checkpoint, 생성 결과, 개인 음성, Consent 증적과 제3자 콘텐츠는 Apache-2.0 적용 대상으로 간주하지 않으며 각각 별도로 검토합니다.
+
+## AI Music Common Contracts 확장
+
+다음 `0.2.0-draft` 문서는 기존 Asset, Artifact, Job, Provider와 Manifest 기준선을 대체하지 않고 AI Music 학습·분석·의도·승격 의미 계약을 확장합니다. Version/Manifest 권위와 lifecycle enum 변경은 기존 소비자 mapping이 필요한 breaking 후보이므로 `0.1.0`으로 가장하지 않습니다.
+
+1. [공통 계약 규칙](00-contract-conventions.md)
+2. [MusicIntent](01-music-intent.md)
+3. [LearningCandidate](02-learning-candidate.md)
+4. [ReferenceAnalysis](03-reference-analysis.md)
+5. [FeatureRecord](04-feature-record.md)
+6. [SimilarityReport](05-similarity-report.md)
+7. [RevisionPlan](06-revision-plan.md)
+8. [DatasetVersion](07-dataset-version.md)
+9. [TrainingRun](08-training-run.md)
+10. [EvaluationRun](09-evaluation-run.md)
+11. [ModelVersion](10-model-version.md)
+12. [ProviderCapability](11-provider-capability.md)
+13. [RightsMetadata](12-rights-metadata.md)
+14. [TrainingEligibility](13-training-eligibility.md)
+
+### 권위와 상태 경계
+
+- DatasetVersion과 ModelVersion이 각 영역의 논리적 source of truth입니다.
+- DatasetManifest와 ModelManifest는 Version을 재현하는 발행 후 immutable evidence이며 독립 approval source가 아닙니다.
+- Candidate `training_allowed`는 Dataset 집합 적격성이나 Model `runtime_allowed`를 자동 의미하지 않습니다.
+- Reference Audio는 Dataset payload로 직접 승격하지 않습니다.
+- Similarity 분석은 창작 지원 정보이며 법적 판정이 아닙니다.
+
+## 변경 이력
+
+| 날짜 | 변경 내용 |
+|---|---|
+| 2026-08-11 | AI Music 공통 객체 13종, Version/Manifest 권위와 Gate 경계 추가 |

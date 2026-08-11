@@ -6,4 +6,4 @@ Repository Boundary, Provider Contract, Dataset, Artifact, Model, Storage, Secur
 
 ADR은 번호, 상태, 날짜, 배경, 결정, 이유, 대안, 장단점, 영향·Migration과 재검토 조건을 포함합니다. 결정을 바꾸면 기존 ADR을 삭제하지 않고 대체 상태와 새 ADR 링크를 남깁니다.
 
-Organization 전체에 영향을 주는 결정은 이 저장소에서 정책을 제안하고 각 Repository ADR과 교차 링크합니다. 현재 공통 ADR Registry는 `[미구현]`입니다.
+Organization 전체에 영향을 주는 결정은 이 저장소에서 정책을 제안하고 각 Repository ADR과 교차 링크합니다. 공통 ADR 초안과 Registry는 [ADR Index](decisions/README.md)에서 관리하며 `draft`는 승인·구현 완료를 뜻하지 않습니다.
