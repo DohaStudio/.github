@@ -46,6 +46,7 @@ flowchart LR
 - TrainingEligibility에는 `runtime_allowed`, Runtime 승격, Model 배포·Evaluation 이후 적격성 판단 필드를 두지 않습니다.
 - RightsMetadata가 revoked되면 기존 eligibility를 재사용하지 않습니다.
 - policy, candidate fingerprint 또는 rights record가 바뀌면 새 판정을 발급합니다.
+- 명시적인 current/supersession 계약 없이 같은 `(candidate_id, usage_purpose)` 판정이 둘 이상 존재하면 Dataset Gate는 순서와 무관하게 fail closed합니다.
 
 ## 변경 이력
 

@@ -51,6 +51,30 @@ FAIL_CLOSED_RIGHTS = {"unknown", "pending_review", "rejected", "expired", "revok
 FAIL_CLOSED_CHECKS = {"fail", "unknown", "missing", "expired", "revoked"}
 RIGHTS_RETENTION_SCOPES = {"training", "runtime"}
 MANIFEST_KINDS = {"dataset_manifest", "model_manifest"}
+PROVIDER_SENSITIVE_KEYS = {
+    "accesstoken",
+    "apikey",
+    "artifactpath",
+    "authorization",
+    "authheader",
+    "credential",
+    "credentials",
+    "datasetpath",
+    "endpoint",
+    "endpointcredential",
+    "modelpath",
+    "password",
+    "privatekey",
+    "rawprovidererror",
+    "rawproviderresponse",
+    "refreshtoken",
+    "secret",
+    "secretkey",
+    "signedurl",
+    "storagepath",
+    "storageroot",
+    "token",
+}
 
 
 @dataclass(frozen=True, order=True)
@@ -327,6 +351,57 @@ class ContractValidator:
         return found
 
     @staticmethod
+    def _provider_sensitive_paths(value: Any, path: str = "$") -> set[str]:
+        found: set[str] = set()
+        if isinstance(value, dict):
+            for key, child in value.items():
+                normalized = re.sub(r"[^a-z0-9]", "", key.casefold())
+                key_parts = {
+                    part for part in re.split(r"[^a-z0-9]+", key.casefold()) if part
+                }
+                child_path = (
+                    f"{path}.{key}"
+                    if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]*", key)
+                    else path
+                )
+                if normalized in PROVIDER_SENSITIVE_KEYS or key_parts & {
+                    "credential",
+                    "credentials",
+                    "secret",
+                    "token",
+                }:
+                    found.add(child_path)
+                found.update(
+                    ContractValidator._provider_sensitive_paths(child, child_path)
+                )
+        elif isinstance(value, list):
+            for index, child in enumerate(value):
+                found.update(
+                    ContractValidator._provider_sensitive_paths(
+                        child, f"{path}[{index}]"
+                    )
+                )
+        elif isinstance(value, str):
+            is_absolute_path = bool(
+                re.match(r"^[A-Za-z]:[\\/]", value) or value.startswith(("/", "\\\\"))
+            )
+            is_signed_url = bool(
+                re.match(r"^https?://", value, re.IGNORECASE)
+                and re.search(
+                    r"[?&][^=]*(?:signature|token|credential)[^=]*=",
+                    value,
+                    re.IGNORECASE,
+                )
+            )
+            if (
+                is_absolute_path
+                or is_signed_url
+                or "-----BEGIN PRIVATE KEY-----" in value
+            ):
+                found.add(path)
+        return found
+
+    @staticmethod
     def _references(value: Any) -> Iterable[str]:
         if isinstance(value, dict):
             reference = value.get("$ref")
@@ -392,24 +467,14 @@ class ContractValidator:
                 )
             )
         if kind == "provider_capability":
-            forbidden = {
-                "endpoint",
-                "credential",
-                "api_key",
-                "access_token",
-                "refresh_token",
-                "model_path",
-                "storage_path",
-            }
-            found = self._forbidden_keys(obj, forbidden)
-            if found:
+            for path in sorted(self._provider_sensitive_paths(obj)):
                 issues.append(
                     self.issue(
                         "PROVIDER_BOUNDARY_VIOLATION",
                         obj,
-                        "$",
+                        path,
                         "provider discovery boundary",
-                        f"Forbidden provider execution fields: {', '.join(sorted(found))}.",
+                        "ProviderCapability contains forbidden execution or sensitive data.",
                     )
                 )
         if kind == "training_eligibility":
@@ -436,6 +501,92 @@ class ContractValidator:
                         )
                     )
         return sorted(set(issues))
+
+    def _provider_permission_issues(
+        self, by_kind: dict[str, list[dict[str, Any]]]
+    ) -> list[ValidationIssue]:
+        issues: list[ValidationIssue] = []
+        capabilities_by_id: dict[str, list[dict[str, Any]]] = {}
+        for capability in by_kind.get("provider_capability", []):
+            capabilities_by_id.setdefault(capability.get("capability_id"), []).append(
+                capability
+            )
+        for capability_id, capabilities in sorted(
+            capabilities_by_id.items(), key=lambda item: str(item[0])
+        ):
+            if len(capabilities) > 1:
+                for capability in capabilities:
+                    issues.append(
+                        self.issue(
+                            "DUPLICATE_ITEM",
+                            capability,
+                            "$.capability_id",
+                            "unique ProviderCapability identity",
+                            "A capability ID must identify exactly one ProviderCapability.",
+                        )
+                    )
+        for intent in by_kind.get("music_intent", []):
+            requested = intent.get("requested_capability")
+            matches = capabilities_by_id.get(requested, [])
+            if len(matches) != 1:
+                issues.append(
+                    self.issue(
+                        "INVALID_REFERENCE",
+                        intent,
+                        "$.requested_capability",
+                        "declared ProviderCapability reference",
+                        "MusicIntent must reference exactly one declared capability.",
+                    )
+                )
+                continue
+            capability = matches[0]
+            if capability.get("status") != "available":
+                issues.append(
+                    self.issue(
+                        "INCOMPATIBLE_RUNTIME",
+                        intent,
+                        "$.requested_capability",
+                        "available ProviderCapability",
+                        "The requested capability is not available.",
+                    )
+                )
+            if intent.get("operation") not in capability.get(
+                "supported_operations", []
+            ):
+                issues.append(
+                    self.issue(
+                        "INCOMPATIBLE_RUNTIME",
+                        intent,
+                        "$.operation",
+                        "declared ProviderCapability operation",
+                        "The requested operation is not declared by the capability.",
+                    )
+                )
+            intent_version = intent.get("schema_version")
+            intent_major = (
+                intent_version.split(".", 1)[0]
+                if isinstance(intent_version, str) and SEMVER.fullmatch(intent_version)
+                else None
+            )
+            compatible_input = any(
+                reference.get("schema_name") == "music_intent"
+                and isinstance(reference.get("schema_version"), str)
+                and SEMVER.fullmatch(reference["schema_version"])
+                and reference["schema_version"].split(".", 1)[0] == intent_major
+                for reference in capability.get("input_schema_refs", [])
+                if isinstance(reference, dict)
+            )
+            if not compatible_input:
+                issues.append(
+                    self.issue(
+                        "INCOMPATIBLE_RUNTIME",
+                        intent,
+                        "$.schema_version",
+                        "ProviderCapability input schema major compatibility",
+                        "The capability does not declare a compatible MusicIntent schema major.",
+                    )
+                )
+        return issues
 
     def _rights_allowed(
         self,
@@ -583,6 +734,10 @@ class ContractValidator:
         split_names = ("train", "validation", "test")
         split_sets = {name: set(split.get(name, [])) for name in split_names}
         union = set().union(*split_sets.values()) if split_sets else set()
+        candidates = {
+            item.get("candidate_id"): item
+            for item in by_kind.get("learning_candidate", [])
+        }
         for left, right in (
             ("train", "validation"),
             ("train", "test"),
@@ -601,10 +756,21 @@ class ContractValidator:
                 )
         groups = split.get("group_keys", {})
         seen_groups: dict[str, str] = {}
+        seen_fingerprints: dict[str, str] = {}
         for split_name in split_names:
-            for candidate_id in split_sets[split_name]:
+            for candidate_id in sorted(split_sets[split_name]):
                 group = groups.get(candidate_id)
-                if group and group in seen_groups and seen_groups[group] != split_name:
+                if not group:
+                    issues.append(
+                        self.issue(
+                            "SPLIT_LEAKAGE",
+                            dataset,
+                            "$.split_manifest.group_keys",
+                            "complete lineage group isolation",
+                            "Every split candidate must declare a lineage group key.",
+                        )
+                    )
+                elif group in seen_groups and seen_groups[group] != split_name:
                     issues.append(
                         self.issue(
                             "SPLIT_LEAKAGE",
@@ -616,6 +782,26 @@ class ContractValidator:
                     )
                 elif group:
                     seen_groups[group] = split_name
+                candidate = candidates.get(candidate_id)
+                fingerprint = (
+                    candidate.get("content_fingerprint") if candidate else None
+                )
+                if (
+                    fingerprint
+                    and fingerprint in seen_fingerprints
+                    and seen_fingerprints[fingerprint] != split_name
+                ):
+                    issues.append(
+                        self.issue(
+                            "SPLIT_LEAKAGE",
+                            dataset,
+                            "$.split_manifest",
+                            "content fingerprint split isolation",
+                            "The same content fingerprint appears in multiple splits.",
+                        )
+                    )
+                elif fingerprint:
+                    seen_fingerprints[fingerprint] = split_name
         if dataset.get("candidate_count") != len(union):
             issues.append(
                 self.issue(
@@ -626,14 +812,11 @@ class ContractValidator:
                     "candidate_count must equal the unique split candidate count.",
                 )
             )
-        candidates = {
-            item.get("candidate_id"): item
-            for item in by_kind.get("learning_candidate", [])
-        }
-        eligibility = {
-            (item.get("candidate_id"), item.get("usage_purpose")): item
-            for item in by_kind.get("training_eligibility", [])
-        }
+        eligibility: dict[tuple[Any, Any], list[dict[str, Any]]] = {}
+        for item in by_kind.get("training_eligibility", []):
+            eligibility.setdefault(
+                (item.get("candidate_id"), item.get("usage_purpose")), []
+            ).append(item)
         for candidate_id in sorted(union):
             candidate = candidates.get(candidate_id)
             if candidate is None:
@@ -647,8 +830,10 @@ class ContractValidator:
                     )
                 )
                 continue
-            decision = eligibility.get((candidate_id, dataset.get("usage_purpose")))
-            if decision is None:
+            decisions = eligibility.get(
+                (candidate_id, dataset.get("usage_purpose")), []
+            )
+            if not decisions:
                 issues.append(
                     self.issue(
                         "DATASET_ELIGIBILITY_FAILURE",
@@ -659,6 +844,21 @@ class ContractValidator:
                     )
                 )
                 continue
+            if len(decisions) != 1:
+                for decision in sorted(
+                    decisions, key=lambda item: str(item.get("object_id"))
+                ):
+                    issues.append(
+                        self.issue(
+                            "DATASET_ELIGIBILITY_FAILURE",
+                            decision,
+                            "$.usage_purpose",
+                            "unique candidate-purpose eligibility decision",
+                            "A candidate and usage purpose must have exactly one eligibility decision.",
+                        )
+                    )
+                continue
+            decision = decisions[0]
             expires = self._parse_time(decision.get("expires_at"))
             checks = decision.get("checks", {})
             if (
@@ -957,6 +1157,57 @@ class ContractValidator:
             )
         return issues
 
+    def _manifest_lineage_issues(
+        self,
+        manifests: list[dict[str, Any]],
+    ) -> list[ValidationIssue]:
+        if not manifests:
+            return []
+        ordered = sorted(manifests, key=lambda item: str(item.get("object_id")))
+        manifest_ids = [item.get("object_id") for item in ordered]
+        id_set = set(manifest_ids)
+        invalid = len(id_set) != len(manifest_ids) or None in id_set
+        children: dict[Any, list[Any]] = {manifest_id: [] for manifest_id in id_set}
+        roots: list[Any] = []
+        for manifest in ordered:
+            manifest_id = manifest.get("object_id")
+            parent = manifest.get("supersedes")
+            if parent is None:
+                roots.append(manifest_id)
+            elif not isinstance(parent, str):
+                invalid = True
+            elif parent == manifest_id or parent not in id_set:
+                invalid = True
+            else:
+                children[parent].append(manifest_id)
+        if len(roots) != 1 or any(len(values) > 1 for values in children.values()):
+            invalid = True
+        tips = [manifest_id for manifest_id, values in children.items() if not values]
+        if len(tips) != 1:
+            invalid = True
+        visited: set[Any] = set()
+        if len(roots) == 1:
+            current = roots[0]
+            while current not in visited:
+                visited.add(current)
+                next_items = children.get(current, [])
+                if len(next_items) != 1:
+                    break
+                current = next_items[0]
+        if visited != id_set:
+            invalid = True
+        if not invalid:
+            return []
+        return [
+            self.issue(
+                "MANIFEST_IDENTITY_MISMATCH",
+                ordered[-1],
+                "$.supersedes",
+                "single issued Manifest lineage",
+                "Issued Manifests for one Version must form one complete linear supersession chain.",
+            )
+        ]
+
     def validate_scenario(self, scenario: Any) -> list[ValidationIssue]:
         if not isinstance(scenario, dict):
             return [
@@ -1007,6 +1258,7 @@ class ContractValidator:
                 )
             elif object_id:
                 by_id[object_id] = obj
+        issues.extend(self._provider_permission_issues(by_kind))
         gated_datasets = [
             dataset
             for dataset in by_kind.get("dataset_version", [])
@@ -1058,23 +1310,8 @@ class ContractValidator:
                     issued_by_source.setdefault(manifest.get(source_field), []).append(
                         manifest
                     )
-            for source_id, manifests in issued_by_source.items():
-                if len(manifests) < 2:
-                    continue
-                manifest_ids = {item.get("object_id") for item in manifests}
-                linked = sum(
-                    item.get("supersedes") in manifest_ids for item in manifests
-                )
-                if linked != len(manifests) - 1:
-                    issues.append(
-                        self.issue(
-                            "MANIFEST_IDENTITY_MISMATCH",
-                            manifests[-1],
-                            f"$.{source_field}",
-                            "single issued Manifest lineage",
-                            f"Conflicting issued Manifests reference Version {source_id}.",
-                        )
-                    )
+            for manifests in issued_by_source.values():
+                issues.extend(self._manifest_lineage_issues(manifests))
         for transition in transitions:
             current = transition.get("current", {})
             previous = transition.get("previous", {})
@@ -1097,6 +1334,26 @@ def load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def input_load_issue(exc: Exception, kind: str) -> ValidationIssue:
+    if isinstance(exc, json.JSONDecodeError):
+        message = "Input is not valid JSON."
+        rule = "JSON syntax"
+    elif isinstance(exc, UnicodeDecodeError):
+        message = "Input is not valid UTF-8."
+        rule = "UTF-8 input"
+    else:
+        message = "Input could not be read."
+        rule = "readable input file"
+    return ValidationIssue(
+        "SCENARIO_INVALID" if kind == "scenario" else "SCHEMA_VALIDATION_ERROR",
+        kind,
+        None,
+        "$",
+        rule,
+        message,
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
@@ -1108,10 +1365,19 @@ def main(argv: list[str] | None = None) -> int:
     validator = ContractValidator()
     if args.check_registry:
         issues = validator.check_registry()
-    elif args.object:
-        issues = validator.validate_object(load_json(args.object), args.kind)
     else:
-        issues = validator.validate_scenario(load_json(args.scenario))
+        input_path = args.object or args.scenario
+        input_kind = args.kind or ("scenario" if args.scenario else "unknown")
+        try:
+            document = load_json(input_path)
+        except (json.JSONDecodeError, UnicodeDecodeError, OSError) as exc:
+            issues = [input_load_issue(exc, input_kind)]
+        else:
+            issues = (
+                validator.validate_object(document, args.kind)
+                if args.object
+                else validator.validate_scenario(document)
+            )
     print(
         json.dumps(
             {"valid": not issues, "errors": [item.to_dict() for item in issues]},

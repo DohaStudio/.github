@@ -55,6 +55,8 @@ a lockfile or an application dependency manifest.
 Validation errors contain a stable code, object kind and opaque ID, JSON path,
 rule, and sanitized message. They do not include local absolute paths, stack
 traces, credentials, raw Provider responses, or artifact payloads.
+Malformed JSON, invalid UTF-8, and unreadable input files use the same sanitized
+JSON error envelope and return a non-zero exit code.
 
 ## Enforced invariants
 
@@ -63,12 +65,18 @@ traces, credentials, raw Provider responses, or artifact payloads.
 - DatasetVersion eligibility is aggregated from each candidate's current,
   purpose-matched TrainingEligibility and RightsMetadata;
 - train, validation, and test members and group keys cannot leak across splits;
+- content fingerprints cannot cross splits, and every included candidate must
+  declare a group key;
 - ModelVersion runtime promotion requires successful training lineage, an
   eligible DatasetVersion, completed and approved evaluation, issued manifest
   evidence, current runtime rights, declared ProviderCapability compatibility,
   and a non-deprecated approved model;
 - TrainingEligibility cannot grant runtime authority, and
   ProviderCapability cannot expose endpoint, credential, token, or path data.
+- MusicIntent must reference one available ProviderCapability that declares the
+  requested operation and a compatible input schema major.
+- issued Manifest replacements form one complete linear `supersedes` chain,
+  and duplicate candidate-purpose TrainingEligibility decisions fail closed.
 
 Dataset and Runtime scenarios require an explicit timezone-aware `evaluated_at`.
 Every TrainingEligibility used by a Dataset gate requires a timezone-aware

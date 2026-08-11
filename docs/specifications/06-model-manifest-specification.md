@@ -59,6 +59,8 @@ Manifest에 로컬 절대 경로를 저장하지 않습니다. 모델과 Checkpo
 
 물리 구성이나 Model 의미가 바뀌면 새 ModelVersion과 새 ModelManifest를 발급합니다. 논리 ModelVersion은 같지만 발행 evidence 오류를 정정해야 하는 예외는 새 Manifest ID와 canonical `supersedes` 관계를 사용하며 source ModelVersion approval을 변경할 수 없습니다. 기존 Version·Manifest를 삭제하거나 덮어쓰지 않습니다.
 
+같은 source ModelVersion의 issued replacement는 root와 tip이 각각 하나인 단일 선형 `supersedes` chain이어야 하며 branch, merge, cycle, self-reference, 누락되거나 분리된 predecessor를 허용하지 않습니다.
+
 ## 관련 명세
 
 - [Provider 계약](04-provider-contract.md)

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import copy
 import json
+import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from typing import Any
@@ -53,6 +55,14 @@ def mutate(document: Any, mutation: dict[str, Any]) -> None:
             target[int(leaf)] = copy.deepcopy(mutation["value"])
         else:
             target[leaf] = copy.deepcopy(mutation["value"])
+    elif mutation["op"] == "copy_append":
+        source = document
+        for token in mutation["from"].split("/")[1:]:
+            source = source[int(token)] if isinstance(source, list) else source[token]
+        cloned = copy.deepcopy(source)
+        for change in mutation.get("changes", []):
+            mutate(cloned, change)
+        target[leaf].append(cloned)
     else:
         raise AssertionError(f"unsupported mutation: {mutation['op']}")
 
@@ -353,6 +363,419 @@ class CommonAIContractTests(unittest.TestCase):
                     )
                     eligibility["expires_at"] = expires_at
                     self.assertEqual([], self.validator.validate_scenario(scenario))
+
+    def test_provider_permission_matrix(self) -> None:
+        base = load_json(FIXTURES / "scenarios" / "runtime-promotion.json")
+        self.assertEqual([], self.validator.validate_scenario(base))
+        cases = (
+            (
+                "undeclared_operation",
+                "operation",
+                "mix",
+                "INCOMPATIBLE_RUNTIME",
+                "$.operation",
+            ),
+            (
+                "unknown_capability",
+                "requested_capability",
+                "capability_unknown",
+                "INVALID_REFERENCE",
+                "$.requested_capability",
+            ),
+            (
+                "case_changed_capability",
+                "requested_capability",
+                "Lyrics_generation",
+                "INVALID_REFERENCE",
+                "$.requested_capability",
+            ),
+            (
+                "empty_capability",
+                "requested_capability",
+                "",
+                "INVALID_REFERENCE",
+                "$.requested_capability",
+            ),
+        )
+        for name, field, value, expected_code, expected_path in cases:
+            with self.subTest(name=name):
+                scenario = copy.deepcopy(base)
+                scenario["objects"][0][field] = value
+                first = self.validator.validate_scenario(scenario)
+                self.assertEqual(first, self.validator.validate_scenario(scenario))
+                self.assertTrue(
+                    any(
+                        issue.code == expected_code
+                        and issue.object_id == "intent_1"
+                        and issue.path == expected_path
+                        for issue in first
+                    ),
+                    [issue.to_dict() for issue in first],
+                )
+
+        unavailable = copy.deepcopy(base)
+        unavailable["objects"][1]["status"] = "unavailable"
+        self.assertTrue(
+            any(
+                issue.code == "INCOMPATIBLE_RUNTIME"
+                and issue.path == "$.requested_capability"
+                for issue in self.validator.validate_scenario(unavailable)
+            )
+        )
+
+        incompatible = copy.deepcopy(base)
+        incompatible["objects"][1]["input_schema_refs"][0]["schema_version"] = "2.0.0"
+        self.assertTrue(
+            any(
+                issue.code == "INCOMPATIBLE_RUNTIME"
+                and issue.path == "$.schema_version"
+                for issue in self.validator.validate_scenario(incompatible)
+            )
+        )
+
+        duplicate = copy.deepcopy(base)
+        duplicate["objects"].append(copy.deepcopy(duplicate["objects"][1]))
+        self.assertIn(
+            "DUPLICATE_ITEM",
+            {issue.code for issue in self.validator.validate_scenario(duplicate)},
+        )
+
+        boolean_bypass = copy.deepcopy(base)
+        boolean_bypass["objects"][0]["requested_capability"] = "capability_unknown"
+        boolean_bypass["objects"][1]["constraints"]["allowed"] = True
+        self.assertIn(
+            "INVALID_REFERENCE",
+            {issue.code for issue in self.validator.validate_scenario(boolean_bypass)},
+        )
+
+    def test_provider_sensitive_field_matrix(self) -> None:
+        base = load_json(FIXTURES / "scenarios" / "runtime-promotion.json")
+        cases = (
+            ("signed_url", "synthetic-sensitive-value"),
+            ("raw-provider-error", "synthetic-sensitive-value"),
+            ("ToKeN", "synthetic-sensitive-value"),
+            ("API-Key", "synthetic-sensitive-value"),
+            ("credential", "synthetic-sensitive-value"),
+            ("private_key", "synthetic-sensitive-value"),
+        )
+        for key, value in cases:
+            with self.subTest(key=key):
+                scenario = copy.deepcopy(base)
+                scenario["objects"][1]["constraints"]["nested"] = {key: value}
+                first = self.validator.validate_scenario(scenario)
+                self.assertEqual(first, self.validator.validate_scenario(scenario))
+                matches = [
+                    issue
+                    for issue in first
+                    if issue.code == "PROVIDER_BOUNDARY_VIOLATION"
+                    and issue.object_id == "lyrics_generation"
+                    and issue.path.startswith("$.constraints.nested")
+                ]
+                self.assertTrue(matches, [issue.to_dict() for issue in first])
+                self.assertNotIn(value, json.dumps([i.to_dict() for i in first]))
+
+        absolute_path = copy.deepcopy(base)
+        absolute_path["objects"][1]["constraints"]["cache"] = (
+            "C:\\synthetic\\private\\model.bin"
+        )
+        self.assertIn(
+            "PROVIDER_BOUNDARY_VIOLATION",
+            {issue.code for issue in self.validator.validate_scenario(absolute_path)},
+        )
+
+        allowed = copy.deepcopy(base)
+        allowed["objects"][1]["constraints"] = {
+            "duration_seconds": 30,
+            "format": "wav",
+            "device_class": "gpu",
+            "rights_required": True,
+        }
+        self.assertEqual([], self.validator.validate_scenario(allowed))
+
+    def test_split_fingerprint_and_group_matrix(self) -> None:
+        base = load_json(FIXTURES / "scenarios" / "runtime-promotion.json")
+        cases = []
+
+        same_fingerprint = copy.deepcopy(base)
+        same_fingerprint["objects"][3]["content_fingerprint"] = same_fingerprint[
+            "objects"
+        ][2]["content_fingerprint"]
+        cases.append(("same_fingerprint", same_fingerprint, "$.split_manifest"))
+
+        missing_group = copy.deepcopy(base)
+        del missing_group["objects"][12]["split_manifest"]["group_keys"][
+            "candidate_validation"
+        ]
+        cases.append(("missing_group", missing_group, "$.split_manifest.group_keys"))
+
+        same_group = copy.deepcopy(base)
+        same_group["objects"][12]["split_manifest"]["group_keys"][
+            "candidate_validation"
+        ] = "group_train"
+        cases.append(("same_group", same_group, "$.split_manifest.group_keys"))
+
+        for name, scenario, expected_path in cases:
+            with self.subTest(name=name):
+                first = self.validator.validate_scenario(scenario)
+                self.assertEqual(first, self.validator.validate_scenario(scenario))
+                self.assertTrue(
+                    any(
+                        issue.code == "SPLIT_LEAKAGE"
+                        and issue.object_id == "dataset_version_1"
+                        and issue.path == expected_path
+                        for issue in first
+                    ),
+                    [issue.to_dict() for issue in first],
+                )
+
+        multiple = copy.deepcopy(same_fingerprint)
+        del multiple["objects"][12]["split_manifest"]["group_keys"][
+            "candidate_validation"
+        ]
+        split_issues = [
+            issue
+            for issue in self.validator.validate_scenario(multiple)
+            if issue.code == "SPLIT_LEAKAGE"
+        ]
+        self.assertGreaterEqual(len(split_issues), 2)
+
+        duplicate = copy.deepcopy(base)
+        duplicate["objects"][12]["split_manifest"]["train"].append("candidate_train")
+        self.assertIn(
+            "DUPLICATE_ITEM",
+            {issue.code for issue in self.validator.validate_scenario(duplicate)},
+        )
+
+        reordered = copy.deepcopy(base)
+        reordered["objects"].reverse()
+        self.assertEqual([], self.validator.validate_scenario(reordered))
+
+    def test_issued_manifest_lineage_graph_matrix(self) -> None:
+        base = load_json(FIXTURES / "scenarios" / "runtime-promotion.json")
+
+        def append_manifest(
+            scenario: dict[str, Any], object_id: str, supersedes: Any
+        ) -> dict[str, Any]:
+            original = next(
+                item
+                for item in scenario["objects"]
+                if item.get("object_id") == "dataset_manifest_1"
+            )
+            manifest = copy.deepcopy(original)
+            manifest["object_id"] = object_id
+            manifest["dataset_manifest_id"] = object_id
+            if supersedes is None:
+                manifest.pop("supersedes", None)
+            else:
+                manifest["supersedes"] = supersedes
+            scenario["objects"].append(manifest)
+            return manifest
+
+        linear = copy.deepcopy(base)
+        append_manifest(linear, "dataset_manifest_2", "dataset_manifest_1")
+        append_manifest(linear, "dataset_manifest_3", "dataset_manifest_2")
+        self.assertEqual([], self.validator.validate_scenario(linear))
+
+        invalid_scenarios = {}
+        branch = copy.deepcopy(base)
+        append_manifest(branch, "dataset_manifest_a", "dataset_manifest_1")
+        append_manifest(branch, "dataset_manifest_b", "dataset_manifest_1")
+        invalid_scenarios["branch"] = branch
+
+        cycle = copy.deepcopy(base)
+        append_manifest(cycle, "dataset_manifest_a", "dataset_manifest_b")
+        append_manifest(cycle, "dataset_manifest_b", "dataset_manifest_a")
+        invalid_scenarios["cycle"] = cycle
+
+        self_reference = copy.deepcopy(base)
+        append_manifest(
+            self_reference, "dataset_manifest_self", "dataset_manifest_self"
+        )
+        invalid_scenarios["self_reference"] = self_reference
+
+        disconnected = copy.deepcopy(base)
+        append_manifest(disconnected, "dataset_manifest_disconnected", None)
+        invalid_scenarios["disconnected"] = disconnected
+
+        merge = copy.deepcopy(base)
+        append_manifest(
+            merge,
+            "dataset_manifest_merge",
+            ["dataset_manifest_1", "dataset_manifest_other"],
+        )
+        invalid_scenarios["merge"] = merge
+
+        missing = copy.deepcopy(base)
+        append_manifest(missing, "dataset_manifest_missing_parent", "missing_parent")
+        invalid_scenarios["missing_parent"] = missing
+
+        for name, scenario in invalid_scenarios.items():
+            with self.subTest(name=name):
+                first = self.validator.validate_scenario(scenario)
+                self.assertEqual(first, self.validator.validate_scenario(scenario))
+                self.assertTrue(
+                    any(
+                        issue.code == "MANIFEST_IDENTITY_MISMATCH"
+                        and issue.path == "$.supersedes"
+                        for issue in first
+                    ),
+                    [issue.to_dict() for issue in first],
+                )
+                scenario["objects"].reverse()
+                self.assertEqual(first, self.validator.validate_scenario(scenario))
+
+        model_branch = copy.deepcopy(base)
+        model_manifest = next(
+            item
+            for item in model_branch["objects"]
+            if item.get("object_id") == "model_manifest_1"
+        )
+        for object_id in ("model_manifest_a", "model_manifest_b"):
+            replacement = copy.deepcopy(model_manifest)
+            replacement["object_id"] = object_id
+            replacement["model_manifest_id"] = object_id
+            replacement["supersedes"] = "model_manifest_1"
+            model_branch["objects"].append(replacement)
+        self.assertTrue(
+            any(
+                issue.code == "MANIFEST_IDENTITY_MISMATCH"
+                and issue.path == "$.supersedes"
+                for issue in self.validator.validate_scenario(model_branch)
+            )
+        )
+
+    def test_duplicate_training_eligibility_is_fail_closed(self) -> None:
+        base = load_json(FIXTURES / "scenarios" / "runtime-promotion.json")
+        original = copy.deepcopy(base["objects"][9])
+        revoked = copy.deepcopy(original)
+        revoked.update(
+            {
+                "object_id": "eligibility_train_revoked",
+                "training_eligibility_id": "eligibility_train_revoked",
+                "decision": "revoked",
+                "approved": False,
+                "training_allowed": False,
+            }
+        )
+        revoked["checks"]["rights"] = "revoked"
+        for name, values in (
+            ("eligible_then_revoked", [revoked]),
+            ("revoked_then_eligible", [revoked]),
+            ("identical_duplicate", [copy.deepcopy(original)]),
+        ):
+            with self.subTest(name=name):
+                scenario = copy.deepcopy(base)
+                if name == "revoked_then_eligible":
+                    scenario["objects"].insert(9, copy.deepcopy(revoked))
+                else:
+                    scenario["objects"].extend(copy.deepcopy(values))
+                first = self.validator.validate_scenario(scenario)
+                self.assertEqual(first, self.validator.validate_scenario(scenario))
+                self.assertTrue(
+                    any(
+                        issue.code == "DATASET_ELIGIBILITY_FAILURE"
+                        and issue.path == "$.usage_purpose"
+                        and issue.rule
+                        == "unique candidate-purpose eligibility decision"
+                        for issue in first
+                    ),
+                    [issue.to_dict() for issue in first],
+                )
+                self.assertIn(
+                    "model_version_1",
+                    {
+                        item.get("object_id")
+                        for item in scenario["objects"]
+                        if item.get("runtime_allowed")
+                    },
+                )
+
+        other_purpose = copy.deepcopy(base)
+        different = copy.deepcopy(original)
+        different["object_id"] = "eligibility_train_other_purpose"
+        different["training_eligibility_id"] = "eligibility_train_other_purpose"
+        different["usage_purpose"] = "other_training"
+        other_purpose["objects"].append(different)
+        self.assertEqual([], self.validator.validate_scenario(other_purpose))
+
+        for object_index, eligibility_id in (
+            (9, "eligibility_train"),
+            (10, "eligibility_validation"),
+            (11, "eligibility_test"),
+        ):
+            with self.subTest(position=eligibility_id):
+                scenario = copy.deepcopy(base)
+                duplicate = copy.deepcopy(scenario["objects"][object_index])
+                duplicate["object_id"] = f"{eligibility_id}_duplicate"
+                duplicate["training_eligibility_id"] = f"{eligibility_id}_duplicate"
+                scenario["objects"].append(duplicate)
+                self.assertTrue(
+                    any(
+                        issue.code == "DATASET_ELIGIBILITY_FAILURE"
+                        and issue.object_id
+                        in {eligibility_id, f"{eligibility_id}_duplicate"}
+                        and issue.path == "$.usage_purpose"
+                        for issue in self.validator.validate_scenario(scenario)
+                    )
+                )
+
+        runtime_only = copy.deepcopy(base)
+        runtime_only["objects"].append(copy.deepcopy(revoked))
+        dataset = runtime_only["objects"][12]
+        dataset["status"] = "approved"
+        dataset["frozen"] = False
+        dataset["training_allowed"] = False
+        self.assertTrue(
+            any(
+                issue.code == "DATASET_ELIGIBILITY_FAILURE"
+                and issue.path == "$.usage_purpose"
+                for issue in self.validator.validate_scenario(runtime_only)
+            )
+        )
+
+    def test_cli_input_errors_are_sanitized(self) -> None:
+        script = ROOT / "tools" / "validate_common_ai.py"
+
+        def assert_sanitized(path: Path, expected_code: str) -> None:
+            command = [
+                sys.executable,
+                "-B",
+                str(script),
+                "--object",
+                str(path),
+                "--kind",
+                "music_intent",
+            ]
+            first = subprocess.run(
+                command, cwd=ROOT, capture_output=True, text=True, check=False
+            )
+            second = subprocess.run(
+                command, cwd=ROOT, capture_output=True, text=True, check=False
+            )
+            self.assertEqual(1, first.returncode)
+            self.assertEqual(
+                (first.stdout, first.stderr), (second.stdout, second.stderr)
+            )
+            self.assertEqual("", first.stderr)
+            payload = json.loads(first.stdout)
+            self.assertFalse(payload["valid"])
+            self.assertEqual(expected_code, payload["errors"][0]["code"])
+            self.assertEqual("$", payload["errors"][0]["path"])
+            self.assertNotIn("Traceback", first.stdout)
+            self.assertNotIn(str(ROOT), first.stdout)
+            self.assertNotIn(str(path), first.stdout)
+
+        assert_sanitized(
+            FIXTURES / "invalid" / "malformed-input.json.txt",
+            "SCHEMA_VALIDATION_ERROR",
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            temporary = Path(directory)
+            invalid_utf8 = temporary / "invalid-utf8.json"
+            invalid_utf8.write_bytes(b"\xff\xfe")
+            assert_sanitized(invalid_utf8, "SCHEMA_VALIDATION_ERROR")
+            assert_sanitized(temporary / "missing.json", "SCHEMA_VALIDATION_ERROR")
+            assert_sanitized(temporary, "SCHEMA_VALIDATION_ERROR")
 
     def test_forward_minor_uses_extensions_only(self) -> None:
         scenario = materialize(
